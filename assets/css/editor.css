@@ -115,6 +115,34 @@ body.focus-mode .panel-section {
   background: var(--surface-hover);
 }
 
+.wiki-link-btn {
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.wiki-link-btn:hover {
+  background: var(--surface-hover);
+}
+
+.preview-wrapper a[href^="#wikilink:"] {
+  color: #1d4ed8;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.mermaid {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+  margin: 12px 0;
+  overflow: auto;
+}
+
 @media (max-width: 1080px) {
   .editor-layout {
     grid-template-columns: 1fr;

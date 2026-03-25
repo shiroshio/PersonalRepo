@@ -144,8 +144,23 @@ const md = window.markdownit({
   breaks: true
 });
 
+let mermaidInitialized = false;
+
+function ensureMermaidInitialized() {
+  if (mermaidInitialized || !window.mermaid) {
+    return;
+  }
+
+  window.mermaid.initialize({
+    startOnLoad: false,
+    securityLevel: "loose",
+    theme: "default"
+  });
+  mermaidInitialized = true;
+}
+
 function renderMarkdownAndMath(source, container) {
-  const html = md.render(source || "");
+  const html = md.render(preprocessWikiLinks(source || ""));
   const clean = window.DOMPurify.sanitize(html);
   container.innerHTML = clean;
 
@@ -159,6 +174,50 @@ function renderMarkdownAndMath(source, container) {
       ],
       strict: "ignore",
       throwOnError: false
+    });
+  }
+
+  renderMermaidInContainer(container);
+}
+
+function preprocessWikiLinks(source) {
+  return source.replace(/\[\[([^\]\n]+)\]\]/g, (_, rawTitle) => {
+    const title = rawTitle.trim();
+    if (!title) {
+      return "";
+    }
+    return `[${title}](#wikilink:${encodeURIComponent(title)})`;
+  });
+}
+
+function renderMermaidInContainer(container) {
+  const codeBlocks = Array.from(container.querySelectorAll("pre code.language-mermaid"));
+  if (codeBlocks.length === 0) {
+    return;
+  }
+
+  ensureMermaidInitialized();
+  if (!window.mermaid) {
+    return;
+  }
+
+  const nodes = [];
+  codeBlocks.forEach((code) => {
+    const pre = code.closest("pre");
+    if (!pre) {
+      return;
+    }
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "mermaid";
+    wrapper.textContent = code.textContent || "";
+    pre.replaceWith(wrapper);
+    nodes.push(wrapper);
+  });
+
+  if (nodes.length > 0) {
+    window.mermaid.run({ nodes }).catch(() => {
+      // Keep raw mermaid source visible if rendering fails.
     });
   }
 }
@@ -284,8 +343,13 @@ const els = {
   editorFocusBtn: document.getElementById("editor-focus-btn"),
   editorStats: document.getElementById("editor-stats"),
   editorToolbar: document.querySelector(".editor-toolbar"),
+  editorInsertPosition: document.getElementById("editor-insert-position"),
+  editorLinkTarget: document.getElementById("editor-link-target"),
+  editorInsertLinkBtn: document.getElementById("editor-insert-link-btn"),
   editorMathTemplate: document.getElementById("editor-math-template"),
   editorInsertMathTemplateBtn: document.getElementById("editor-insert-math-template-btn"),
+  editorOutgoingLinks: document.getElementById("editor-outgoing-links"),
+  editorBacklinks: document.getElementById("editor-backlinks"),
   preview: document.getElementById("preview"),
   backupExportBtn: document.getElementById("backup-export-btn"),
   backupImportMode: document.getElementById("backup-import-mode"),
@@ -673,6 +737,7 @@ function bindEditorActions() {
 
   if (els.editorInsertMathTemplateBtn) {
     els.editorInsertMathTemplateBtn.addEventListener("click", () => {
+      ensureEditableReport();
       const type = els.editorMathTemplate.value;
       if (!type) {
         alert("삽입할 수식 템플릿을 선택하세요.");
@@ -684,10 +749,68 @@ function bindEditorActions() {
         return;
       }
 
-      insertMathBlock(latex);
+      insertMathBlock(latex, els.editorInsertPosition?.value || "cursor");
       setStatus("수식 템플릿을 삽입했습니다.");
     });
   }
+
+  if (els.editorInsertLinkBtn) {
+    els.editorInsertLinkBtn.addEventListener("click", () => {
+      const title = els.editorLinkTarget.value;
+      if (!title) {
+        alert("링크할 리포트를 선택하세요.");
+        return;
+      }
+      insertWikiLink(title);
+      setStatus("내부 링크를 삽입했습니다.");
+    });
+  }
+
+  if (els.preview) {
+    els.preview.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+
+      const link = target.closest("a[href^='#wikilink:']");
+      if (!link) {
+        return;
+      }
+
+      event.preventDefault();
+      const href = link.getAttribute("href") || "";
+      const encoded = href.replace("#wikilink:", "");
+      const title = decodeURIComponent(encoded);
+      const report = findReportByTitle(title);
+      if (!report) {
+        alert(`연결된 문서를 찾을 수 없습니다: ${title}`);
+        return;
+      }
+
+      selectedReportId = report.id;
+      data.settings.lastReportId = report.id;
+      saveAndRender("위키 링크로 문서를 열었습니다.");
+    });
+  }
+
+  [els.editorOutgoingLinks, els.editorBacklinks].forEach((zone) => {
+    zone?.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+
+      const reportId = target.dataset.openReportId;
+      if (!reportId) {
+        return;
+      }
+
+      selectedReportId = reportId;
+      data.settings.lastReportId = reportId;
+      saveAndRender("문서를 열었습니다.");
+    });
+  });
 
   document.addEventListener("keydown", (event) => {
     if (!event.ctrlKey) {
@@ -1137,6 +1260,12 @@ function renderEditor() {
       els.editorStats.textContent = "0자";
     }
     els.preview.innerHTML = "<p class='muted'>리포트를 선택하거나 새로 생성해 주세요.</p>";
+    if (els.editorOutgoingLinks) {
+      els.editorOutgoingLinks.innerHTML = "<p class='text-muted'>연결 문서가 없습니다.</p>";
+    }
+    if (els.editorBacklinks) {
+      els.editorBacklinks.innerHTML = "<p class='text-muted'>백링크가 없습니다.</p>";
+    }
     return;
   }
 
@@ -1148,6 +1277,8 @@ function renderEditor() {
   updateEditorMeta(report);
   renderPreview(report.content);
   renderEditorStats(report.content);
+  renderWikiPanels(report);
+  renderLinkTargetOptions(report.id);
 }
 
 function updateEditorMeta(report) {
@@ -1165,6 +1296,57 @@ function renderEditorStats(content) {
   const text = (content || "").trim();
   const charCount = text.length;
   els.editorStats.textContent = `${charCount}자`;
+}
+
+function renderWikiPanels(currentReport) {
+  if (!els.editorOutgoingLinks || !els.editorBacklinks) {
+    return;
+  }
+
+  const outgoingTitles = extractWikiTitles(currentReport.content);
+  if (outgoingTitles.length === 0) {
+    els.editorOutgoingLinks.innerHTML = "<p class='text-muted'>연결 문서가 없습니다.</p>";
+  } else {
+    els.editorOutgoingLinks.innerHTML = outgoingTitles
+      .map((title) => {
+        const report = findReportByTitle(title);
+        if (!report) {
+          return `<div class="badge">${escapeHtml(title)} (미존재)</div>`;
+        }
+        return `<button class="wiki-link-btn" data-open-report-id="${report.id}">${escapeHtml(report.title)}</button>`;
+      })
+      .join("");
+  }
+
+  const backlinks = data.reports.filter((report) => {
+    if (report.id === currentReport.id) {
+      return false;
+    }
+    const titles = extractWikiTitles(report.content).map(normalizeTitle);
+    return titles.includes(normalizeTitle(currentReport.title));
+  });
+
+  if (backlinks.length === 0) {
+    els.editorBacklinks.innerHTML = "<p class='text-muted'>백링크가 없습니다.</p>";
+  } else {
+    els.editorBacklinks.innerHTML = backlinks
+      .map((report) => `<button class="wiki-link-btn" data-open-report-id="${report.id}">${escapeHtml(report.title)}</button>`)
+      .join("");
+  }
+}
+
+function renderLinkTargetOptions(currentReportId) {
+  if (!els.editorLinkTarget) {
+    return;
+  }
+
+  const options = [
+    `<option value="">내부 링크 대상 선택...</option>`,
+    ...data.reports
+      .filter((report) => report.id !== currentReportId)
+      .map((report) => `<option value="${escapeHtml(report.title)}">${escapeHtml(report.title)}</option>`)
+  ];
+  els.editorLinkTarget.innerHTML = options.join("");
 }
 
 function applyInsert(action) {
@@ -1201,7 +1383,8 @@ function applyInsert(action) {
     after = "\n```";
     fallback = "코드";
   } else if (action === "math") {
-    insertMathBlock("x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}");
+    ensureEditableReport();
+    insertMathBlock("x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}", els.editorInsertPosition?.value || "cursor");
     return;
   } else if (action === "table") {
     before = "| 항목 | 값 |\n|---|---|\n| 예시 | 입력 |\n";
@@ -1220,7 +1403,48 @@ function applyInsert(action) {
   textarea.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-function insertMathBlock(latex) {
+function extractWikiTitles(content) {
+  const regex = /\[\[([^\]\n]+)\]\]/g;
+  const titles = [];
+  let match = regex.exec(content || "");
+  while (match) {
+    const title = match[1].trim();
+    if (title && !titles.includes(title)) {
+      titles.push(title);
+    }
+    match = regex.exec(content || "");
+  }
+  return titles;
+}
+
+function normalizeTitle(value) {
+  return (value || "").trim().toLowerCase();
+}
+
+function findReportByTitle(title) {
+  const needle = normalizeTitle(title);
+  return data.reports.find((report) => normalizeTitle(report.title) === needle) || null;
+}
+
+function insertWikiLink(title) {
+  const textarea = els.editorContent;
+  if (!textarea || !title) {
+    return;
+  }
+
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const selected = textarea.value.slice(start, end).trim();
+  const insertText = `[[${selected || title}]]`;
+  const next = `${textarea.value.slice(0, start)}${insertText}${textarea.value.slice(end)}`;
+  textarea.value = next;
+  textarea.focus();
+  const cursor = start + insertText.length;
+  textarea.setSelectionRange(cursor, cursor);
+  textarea.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function insertMathBlock(latex, position = "cursor") {
   const textarea = els.editorContent;
   if (!textarea) {
     return;
@@ -1229,15 +1453,41 @@ function insertMathBlock(latex) {
   const start = textarea.selectionStart;
   const end = textarea.selectionEnd;
   const selected = textarea.value.slice(start, end).trim();
-  const body = selected || latex;
-  const block = `\n$$\n${body}\n$$\n`;
+  const body = position === "replace" && selected ? selected : latex;
+  const block = `\\[ ${body} \\]`;
 
-  const next = `${textarea.value.slice(0, start)}${block}${textarea.value.slice(end)}`;
+  let next = textarea.value;
+  let cursor = 0;
+
+  if (position === "start") {
+    next = `${block}\n\n${textarea.value}`;
+    cursor = block.length;
+  } else if (position === "end") {
+    next = `${textarea.value}${textarea.value.endsWith("\n") ? "" : "\n"}${block}`;
+    cursor = next.length;
+  } else {
+    next = `${textarea.value.slice(0, start)}${block}${textarea.value.slice(position === "replace" ? end : start)}`;
+    cursor = start + block.length;
+  }
+
   textarea.value = next;
   textarea.focus();
-  const cursor = start + block.length;
   textarea.setSelectionRange(cursor, cursor);
   textarea.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function ensureEditableReport() {
+  const exists = getSelectedReport();
+  if (exists) {
+    return exists;
+  }
+
+  const report = makeReport();
+  data.reports.unshift(report);
+  selectedReportId = report.id;
+  data.settings.lastReportId = report.id;
+  renderAll();
+  return report;
 }
 
 function getMathTemplate(type) {
