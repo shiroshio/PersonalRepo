@@ -352,6 +352,7 @@ const els = {
   navButtons: Array.from(document.querySelectorAll("[data-view-target]")),
   views: Array.from(document.querySelectorAll(".main-view")),
   syncStatus: document.getElementById("sync-status"),
+  themeToggleBtn: document.getElementById("theme-toggle-btn"),
   statsCategories: document.getElementById("stats-categories"),
   statsReports: document.getElementById("stats-reports"),
   statsUpdated: document.getElementById("stats-updated"),
@@ -406,6 +407,9 @@ const els = {
 init();
 
 function init() {
+  const preferredTheme = data.settings.theme || "light";
+  applyTheme(preferredTheme);
+
   isPreviewOpen = data.settings.previewOpen !== false;
   const savedReportId = data.settings.lastReportId;
   if (savedReportId && data.reports.some((r) => r.id === savedReportId)) {
@@ -428,12 +432,44 @@ function init() {
   bindReportListActions();
   bindEditorActions();
   bindBackupActions();
+  bindThemeActions();
 
   if (!selectedReportId && data.reports.length > 0) {
     selectedReportId = data.reports[0].id;
   }
 
   renderAll();
+}
+
+function bindThemeActions() {
+  if (!els.themeToggleBtn) {
+    return;
+  }
+
+  updateThemeButtonText();
+  els.themeToggleBtn.addEventListener("click", () => {
+    const nextTheme = getCurrentTheme() === "dark" ? "light" : "dark";
+    applyTheme(nextTheme);
+    data.settings.theme = nextTheme;
+    saveData(data);
+    updateThemeButtonText();
+    setStatus(nextTheme === "dark" ? "다크 모드 적용" : "라이트 모드 적용");
+  });
+}
+
+function getCurrentTheme() {
+  return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+}
+
+function updateThemeButtonText() {
+  if (!els.themeToggleBtn) {
+    return;
+  }
+  els.themeToggleBtn.textContent = getCurrentTheme() === "dark" ? "라이트 모드" : "다크 모드";
 }
 
 function bindNav() {
