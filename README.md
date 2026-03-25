@@ -15,6 +15,10 @@ Personal Report Site
 - Open `index.html` directly in a browser, or
 - Serve the repository root with any static server
 
+## Documentation
+
+- User Guide: [manual.md](./manual.md)
+
 ## Stack
 
 - HTML, CSS, JavaScript (ES modules)

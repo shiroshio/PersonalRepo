@@ -10,123 +10,165 @@
     <link rel="stylesheet" href="./assets/css/editor.css" />
   </head>
   <body>
-    <div class="app-shell">
-      <header class="topbar card">
-        <div>
-          <h1>과제·연구 리포트 스튜디오</h1>
-          <p class="phase-note">plan.md 기반 MVP: 카테고리, 리포트 CRUD, Markdown+LaTeX, 백업/복원</p>
+    <div class="app-layout">
+      <!-- 사이드바 네비게이션 -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-brand">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            리포트 스튜디오
+          </div>
+          <div class="sidebar-brand-sub">개인 연구용 Markdown 에디터</div>
         </div>
-        <span id="sync-status" class="badge status-ok">초기화 완료</span>
-      </header>
+        <nav class="sidebar-nav">
+          <button data-view-target="dashboard" class="active">📊 대시보드</button>
+          <button data-view-target="categories">📁 카테고리 관리</button>
+          <button data-view-target="reports">🗂️ 리포트 목록</button>
+          <button data-view-target="editor">✍️ 에디터</button>
+          <button data-view-target="backup">⚙️ 설정 및 백업</button>
+        </nav>
+        <div class="sidebar-footer">
+          <button id="report-create-btn">➕ 새 리포트 만들기</button>
+        </div>
+      </aside>
 
-      <nav class="nav-tabs card">
-        <button data-view-target="dashboard" class="active">대시보드</button>
-        <button data-view-target="categories">카테고리</button>
-        <button data-view-target="reports">리포트 목록</button>
-        <button data-view-target="editor">에디터</button>
-        <button data-view-target="backup">백업/복원</button>
-      </nav>
+      <!-- 메인 컨텐츠 영역 -->
+      <main class="main-content">
+        <header class="topbar">
+          <h2 id="current-view-title" style="margin:0;">대시보드</h2>
+          <span id="sync-status" class="badge status-ok">초기화 완료</span>
+        </header>
 
-      <div class="content-grid">
-        <aside class="side-panel card">
-          <section class="panel-section">
-            <h3>빠른 카테고리 추가</h3>
-            <input id="category-input" type="text" placeholder="예: 딥러닝" />
-            <button id="category-add-btn">카테고리 추가</button>
-          </section>
-
-          <section class="panel-section">
-            <h3>리포트 탐색</h3>
-            <input id="report-search" type="text" placeholder="제목/본문 검색" />
-            <select id="report-category-filter"></select>
-            <button id="report-create-btn">새 리포트 만들기</button>
-            <div id="report-list" class="report-list"></div>
-          </section>
-        </aside>
-
-        <main class="main-panel card">
+        <div class="view-container">
+          <!-- 대시보드 뷰 -->
           <section class="main-view active" data-view="dashboard">
-            <h2>대시보드</h2>
-            <div class="stats">
+            <div class="split-3">
               <article class="stat-card">
-                <h4>카테고리 수</h4>
+                <h4>분류된 카테고리</h4>
                 <p id="stats-categories">0</p>
               </article>
               <article class="stat-card">
-                <h4>리포트 수</h4>
+                <h4>작성된 리포트</h4>
                 <p id="stats-reports">0</p>
               </article>
               <article class="stat-card">
-                <h4>최근 수정</h4>
-                <p id="stats-updated">없음</p>
+                <h4>최근 업데이트</h4>
+                <p id="stats-updated" style="font-size:1.1rem;margin-top:8px;">없음</p>
               </article>
             </div>
             <section class="panel-section">
-              <h3>최근 수정 리포트</h3>
-              <div id="recent-list" class="recent-list"></div>
+              <div class="list-header">
+                <h3>최근 수정 리포트</h3>
+              </div>
+              <div id="recent-list" class="grid-list" style="margin-top: 16px;"></div>
             </section>
           </section>
 
+          <!-- 카테고리 관리 뷰 -->
           <section class="main-view" data-view="categories">
-            <h2>카테고리 관리</h2>
-            <p class="muted">삭제 시 연결 리포트는 미분류로 이동됩니다.</p>
-            <div id="category-list" class="category-list"></div>
-          </section>
-
-          <section class="main-view" data-view="reports">
-            <h2>리포트 목록</h2>
-            <p class="muted">좌측 패널에서 검색/필터 후 편집 버튼으로 이동할 수 있습니다.</p>
-          </section>
-
-          <section class="main-view" data-view="editor">
-            <h2>리포트 에디터</h2>
-            <div class="form-grid">
-              <div class="form-row">
-                <label for="editor-title">제목</label>
-                <input id="editor-title" type="text" placeholder="리포트 제목" />
+            <section class="panel-section">
+              <div class="form-row" style="max-width: 400px; margin-bottom: 24px;">
+                <label for="category-input">새 카테고리 추가</label>
+                <div class="inline-group">
+                  <input id="category-input" type="text" placeholder="예: 데이터 분석" style="flex:1;" />
+                  <button id="category-add-btn">추가</button>
+                </div>
               </div>
-              <div class="split">
+              <h3>카테고리 목록</h3>
+              <p class="text-muted" style="margin-bottom: 16px;">삭제 시 연결된 리포트는 미분류로 이동됩니다.</p>
+              <div id="category-list" class="grid-list"></div>
+            </section>
+          </section>
+
+          <!-- 리포트 목록 뷰 -->
+          <section class="main-view" data-view="reports">
+            <section class="panel-section">
+              <div class="inline-group" style="margin-bottom: 24px;">
+                <input id="report-search" type="text" placeholder="검색어 입력..." style="flex:1; max-width: 300px;" />
+                <select id="report-category-filter" style="min-width: 150px;"></select>
+              </div>
+              <div id="report-list" class="grid-list"></div>
+            </section>
+          </section>
+
+          <!-- 에디터 뷰 -->
+          <section class="main-view" data-view="editor">
+            <div class="panel-section" style="padding: 24px;">
+              <div class="form-row" style="margin-bottom: 20px;">
+                <label for="editor-title" style="font-size: 1.1rem;">리포트 제목</label>
+                <input id="editor-title" type="text" placeholder="리포트 제목을 입력하세요" style="font-size: 1.25rem; font-weight: 600;" />
+              </div>
+              <div class="split-2" style="margin-bottom: 20px;">
                 <div class="form-row">
-                  <label for="editor-category">카테고리</label>
+                  <label for="editor-category">분류 카테고리</label>
                   <select id="editor-category"></select>
                 </div>
                 <div class="form-row">
                   <label for="editor-tags">태그 (쉼표 구분)</label>
-                  <input id="editor-tags" type="text" placeholder="vision, experiment" />
+                  <input id="editor-tags" type="text" placeholder="예: vision, experiment" />
                 </div>
               </div>
-              <div class="inline-actions">
+
+              <!-- 템플릿 기능 & 액션 -->
+              <div class="inline-group" style="margin-bottom: 24px; padding: 12px; background: #f8fafc; border-radius: 8px;">
                 <button id="editor-save-btn">수동 저장</button>
-                <button id="editor-export-md-btn" class="secondary">Markdown 내보내기</button>
-                <label class="badge" for="editor-import-md-input">Markdown 가져오기</label>
+                <select id="editor-template" style="margin-left:auto;">
+                  <option value="">템플릿 선택...</option>
+                  <option value="experiment">실험 보고서</option>
+                  <option value="literature">문헌 리뷰</option>
+                  <option value="meeting">회의록</option>
+                </select>
+                <button id="editor-apply-template-btn" class="ghost">적용</button>
+                <div style="border-left: 1px solid var(--border); height: 24px; margin: 0 8px;"></div>
+                <button id="editor-export-md-btn" class="secondary">내보내기 (.md)</button>
+                <label class="badge" for="editor-import-md-input" style="cursor: pointer;">가져오기</label>
                 <input id="editor-import-md-input" type="file" accept=".md,text/markdown" hidden />
-                <button id="editor-delete-btn" class="danger">리포트 삭제</button>
-                <span id="editor-updated" class="badge">최근 수정: -</span>
+                <button id="editor-delete-btn" class="danger" style="margin-left: 8px;">삭제</button>
               </div>
-              <div class="split">
-                <div class="form-row">
-                  <label for="editor-content">본문 (Markdown + LaTeX)</label>
-                  <textarea id="editor-content" placeholder="# 제목\n인라인 수식: $E=mc^2$\n\n블록 수식:\n$$\n\int_a^b f(x)dx\n$$"></textarea>
+              
+              <div class="inline-group" style="margin-bottom: 12px; justify-content: space-between;">
+                <span id="editor-updated" class="text-muted" style="font-size: 0.85rem;">최근 수정: -</span>
+                <button class="ghost" onclick="window.print()">🖨️ PDF/인쇄</button>
+              </div>
+
+              <div class="editor-layout">
+                <div class="editor-pane">
+                  <label for="editor-content" style="margin-bottom:8px;font-weight:600;">작성 영역 (Markdown & LaTeX)</label>
+                  <textarea id="editor-content" placeholder="이곳에 마크다운과 수식을 작성하세요."></textarea>
                 </div>
-                <div class="form-row">
-                  <label>미리보기</label>
-                  <div id="preview" class="preview"></div>
+                <div class="editor-pane">
+                  <label style="margin-bottom:8px;font-weight:600;">미리보기 (실시간 렌더링)</label>
+                  <div id="preview" class="preview-wrapper"></div>
                 </div>
               </div>
             </div>
           </section>
 
+          <!-- 설정 및 백업 뷰 -->
           <section class="main-view" data-view="backup">
-            <h2>백업/복원</h2>
-            <div class="inline-actions">
-              <button id="backup-export-btn">전체 데이터 JSON 내보내기</button>
-              <label class="badge" for="backup-import-input">JSON 가져오기</label>
-              <input id="backup-import-input" type="file" accept="application/json,.json" hidden />
-            </div>
-            <p id="backup-message" class="muted">중요 데이터는 주기적으로 백업해 주세요.</p>
+            <section class="panel-section">
+              <h3>데이터 백업/복원</h3>
+              <p class="text-muted" style="margin-bottom: 24px;">모든 데이터는 브라우저 내부에만 저장됩니다. 중요 데이터는 주기적으로 JSON으로 내보내어 안전하게 보관하세요.</p>
+              
+              <div class="split-2">
+                <div class="list-item">
+                  <h4>전체 백업 (내보내기)</h4>
+                  <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 16px;">모든 카테고리와 리포트를 하나의 JSON 파일로 다운로드합니다.</p>
+                  <button id="backup-export-btn" style="align-self: flex-start;">JSON 백업 내보내기</button>
+                </div>
+                <div class="list-item">
+                  <h4>데이터 복원 (가져오기)</h4>
+                  <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 16px;">백업해둔 JSON 파일을 불러와 데이터를 덮어씁니다.</p>
+                  <label class="badge" for="backup-import-input" style="cursor: pointer; padding: 8px 16px; background: var(--primary); color: #fff;">JSON 파일 선택</label>
+                  <input id="backup-import-input" type="file" accept="application/json,.json" hidden />
+                </div>
+              </div>
+              <p id="backup-message" style="margin-top: 16px; font-weight: 500;"></p>
+            </section>
           </section>
-        </main>
-      </div>
+
+        </div>
+      </main>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>

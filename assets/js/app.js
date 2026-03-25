@@ -31,6 +31,8 @@ const els = {
   editorDeleteBtn: document.getElementById("editor-delete-btn"),
   editorExportMdBtn: document.getElementById("editor-export-md-btn"),
   editorImportMdInput: document.getElementById("editor-import-md-input"),
+  editorTemplate: document.getElementById("editor-template"),
+  editorApplyTemplateBtn: document.getElementById("editor-apply-template-btn"),
   preview: document.getElementById("preview"),
   backupExportBtn: document.getElementById("backup-export-btn"),
   backupImportInput: document.getElementById("backup-import-input"),
@@ -57,6 +59,8 @@ function bindNav() {
   els.navButtons.forEach((button) => {
     button.addEventListener("click", () => {
       currentView = button.dataset.viewTarget;
+      const titleLabel = button.textContent.replace(/[^가-힣a-zA-Z\s\/]/g, '').trim();
+      document.getElementById('current-view-title').textContent = titleLabel;
       renderViews();
     });
   });
@@ -258,6 +262,41 @@ function bindEditorActions() {
     selectedReportId = report.id;
     event.target.value = "";
     saveAndRender("Markdown 가져오기 완료");
+  });
+
+  els.editorApplyTemplateBtn.addEventListener("click", () => {
+    const report = getSelectedReport();
+    if (!report) return;
+
+    const templateType = els.editorTemplate.value;
+    if (!templateType) {
+      alert("적용할 템플릿을 선택하세요.");
+      return;
+    }
+
+    if (report.content.trim() !== "") {
+      const ok = confirm("현재 작성된 내용이 있습니다. 템플릿을 덮어씌울까요?");
+      if (!ok) return;
+    }
+
+    let templateText = "";
+    if (templateType === "experiment") {
+      templateText = "# 🧪 실험 보고서\n\n## 1. 목적\n- \n\n## 2. 가설 및 변인\n- 가설:\n- 독립변인:\n- 종속변인:\n\n## 3. 방법 (Methods)\n1. \n2. \n\n## 4. 데이터 및 결과 (Results)\n$$ y = ax + b $$\n\n## 5. 결론 및 고찰 (Conclusion)\n- ";
+    } else if (templateType === "literature") {
+      templateText = "# 📚 문헌 리뷰\n\n## 메타정보\n- **논문 제목**: \n- **저자**: \n- **출판년도/저널**: \n\n## 1. 연구 배경 및 목적\n- \n\n## 2. 한계점 및 제안점 (Motivation)\n- \n\n## 3. 사용한 방법론 (Methodology)\n- \n\n## 4. 주요 결과 및 기여 (Contribution)\n- \n\n## 5. 내 연구에의 적용 아이디어\n- ";
+    } else if (templateType === "meeting") {
+      templateText = "# 🤝 연구 미팅 회의록\n\n- **일시**: \n- **참석자**: \n\n## 1. 진행 상황 공유\n- \n- \n\n## 2. 논의 사항 및 피드백\n- [ ] 논의 안건 1\n  - 피드백 내용\n\n## 3. 다음 목표 (Action Items)\n- [ ] \n- [ ] \n\n## 4. 비고\n- ";
+    }
+
+    if (templateText) {
+      els.editorContent.value = templateText;
+      report.content = templateText;
+      renderPreview(templateText);
+      report.updatedAt = new Date().toISOString();
+      updateEditorMeta(report);
+      saveData(data);
+      setStatus("템플릿 적용 완료");
+    }
   });
 }
 
