@@ -108,13 +108,9 @@ $R(x):=\int_a^x e^t r(t)\,dt$ 라 두면 $R$ 는 미분가능, $R'(x)=e^x r(x)$.
 1. $R(x)$ 가 유계이면 $R(x)/e^x\to 0$.
 2. $R(x)$ 가 $\pm\infty$ 로 발산하면 로피탈 정리로 다음을 얻는다.
 
-$$
-\lim_{x\to\infty}\frac{R(x)}{e^x}
-=
-\lim_{x\to\infty}\frac{R'(x)}{e^x}
-=
-\lim_{x\to\infty}r(x)=0.
-$$
+리스트 밖에서 식을 다시 쓰면
+
+$$\lim_{x\to\infty}\frac{R(x)}{e^x}=\lim_{x\to\infty}\frac{R'(x)}{e^x}=\lim_{x\to\infty}r(x)=0.$$
 
 두 경우 모두 둘째 항의 극한은 $0$ 이므로
 
