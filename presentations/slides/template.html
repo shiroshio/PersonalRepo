@@ -324,35 +324,58 @@
         });
       }
 
+      function looksLikeMermaid(source) {
+        const text = (source || "").trim();
+        if (!text) {
+          return false;
+        }
+
+        return /^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|pie|mindmap|timeline|gitGraph|quadrantChart|xychart-beta|requirementDiagram|C4Context|C4Container|C4Component|C4Dynamic|C4Deployment)\b/m.test(text);
+      }
+
       function renderMermaidBlocks() {
         if (!window.mermaid) {
           return;
         }
 
-        const blocks = Array.from(document.querySelectorAll(".reveal pre code.language-mermaid"));
+        const blocks = Array.from(document.querySelectorAll(".reveal pre code")).filter((code) => {
+          const className = code.className || "";
+          const source = code.textContent || "";
+          const classMatched = /(^|\s)(language-)?mermaid(\s|$)/i.test(className);
+          return classMatched || looksLikeMermaid(source);
+        });
+
         if (blocks.length === 0) {
           return;
         }
 
-        const nodes = [];
-        blocks.forEach((code) => {
+        blocks.forEach((code, idx) => {
           const pre = code.closest("pre");
           if (!pre) {
             return;
           }
 
+          if (pre.dataset.mermaidProcessed === "true") {
+            return;
+          }
+
           const wrapper = document.createElement("div");
           wrapper.className = "mermaid";
-          wrapper.textContent = code.textContent || "";
+          const source = (code.textContent || "").trim();
+          wrapper.textContent = source;
           pre.replaceWith(wrapper);
-          nodes.push(wrapper);
-        });
+          pre.dataset.mermaidProcessed = "true";
 
-        if (nodes.length > 0) {
-          window.mermaid.run({ nodes }).catch(() => {
+          const id = `slide-mermaid-${Date.now()}-${idx}`;
+          window.mermaid.render(id, source).then((result) => {
+            wrapper.innerHTML = result.svg;
+            if (typeof result.bindFunctions === "function") {
+              result.bindFunctions(wrapper);
+            }
+          }).catch(() => {
             // Keep source text visible on render errors.
           });
-        }
+        });
       }
 
       function initReportSelector() {
@@ -440,6 +463,9 @@
       });
       initializeMermaid();
       deck.initialize().then(() => {
+        renderMermaidBlocks();
+      });
+      deck.on("ready", () => {
         renderMermaidBlocks();
       });
       deck.on("slidechanged", () => {
