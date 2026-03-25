@@ -93,13 +93,23 @@ $$
 위 식에서 $A=A_\varepsilon$ 로 두고, $x\ge A_\varepsilon$ 에 대해 절댓값을 취하면
 
 $$
-\begin{aligned}
 |h(x)|
-&\le e^{-(x-A_\varepsilon)}|h(A_\varepsilon)| + e^{-x}\int_{A_\varepsilon}^x e^t|r(t)|\,dt \\
-&\le e^{-(x-A_\varepsilon)}|h(A_\varepsilon)| + \varepsilon\,e^{-x}\int_{A_\varepsilon}^x e^t\,dt \\
-&= e^{-(x-A_\varepsilon)}|h(A_\varepsilon)| + \varepsilon\bigl(1-e^{-(x-A_\varepsilon)}\bigr) \\
-&\le e^{-(x-A_\varepsilon)}|h(A_\varepsilon)|+\varepsilon.
-\end{aligned}
+\le e^{-(x-A_\varepsilon)}|h(A_\varepsilon)| + e^{-x}\int_{A_\varepsilon}^x e^t|r(t)|\,dt
+$$
+
+$$
+|h(x)|
+\le e^{-(x-A_\varepsilon)}|h(A_\varepsilon)| + \varepsilon\,e^{-x}\int_{A_\varepsilon}^x e^t\,dt
+$$
+
+$$
+e^{-x}\int_{A_\varepsilon}^x e^t\,dt = 1-e^{-(x-A_\varepsilon)}
+$$
+
+$$
+|h(x)|
+\le e^{-(x-A_\varepsilon)}|h(A_\varepsilon)| + \varepsilon\bigl(1-e^{-(x-A_\varepsilon)}\bigr)
+\le e^{-(x-A_\varepsilon)}|h(A_\varepsilon)|+\varepsilon.
 $$
 
 이제 $x$ 를 충분히 크게 잡아
