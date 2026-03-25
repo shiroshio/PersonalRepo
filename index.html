@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Personal Report Site</title>
+    <style>
+      :root {
+        --bg: #f5f7fb;
+        --card: #ffffff;
+        --text: #1d2433;
+        --muted: #5a6478;
+        --accent: #1f6feb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "Noto Sans KR", sans-serif;
+        color: var(--text);
+        background: radial-gradient(circle at top right, #dce8ff 0%, var(--bg) 40%);
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+
+      .card {
+        width: min(760px, 100%);
+        background: var(--card);
+        border-radius: 16px;
+        box-shadow: 0 16px 50px rgba(20, 40, 90, 0.12);
+        padding: 28px;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: clamp(1.8rem, 2.5vw, 2.4rem);
+      }
+
+      p {
+        margin: 0 0 10px;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+
+      .links {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      a {
+        text-decoration: none;
+        color: white;
+        background: var(--accent);
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-weight: 600;
+      }
+
+      a.secondary {
+        background: #2b3550;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <h1>Personal Report Site</h1>
+      <p>GitHub Pages 배포가 정상적으로 연결되었습니다.</p>
+      <p>이 저장소는 과제 및 연구 리포트 작성/관리 웹사이트로 확장될 예정입니다.</p>
+      <div class="links">
+        <a href="./plan.md">프로젝트 계획서 보기</a>
+        <a class="secondary" href="https://github.com/shiroshio/PersonalRepo" target="_blank" rel="noreferrer">GitHub 저장소</a>
+      </div>
+    </main>
+  </body>
+</html>
