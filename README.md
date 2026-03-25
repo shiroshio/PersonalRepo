@@ -2,6 +2,26 @@
 
 Personal Report Site
 
+## MVP Scope
+
+- Category CRUD (with uncategorized fallback)
+- Report CRUD with LocalStorage persistence
+- Markdown + LaTeX preview
+- Report Markdown export/import
+- Full JSON backup/restore
+
+## Local Run
+
+- Open `index.html` directly in a browser, or
+- Serve the repository root with any static server
+
+## Stack
+
+- HTML, CSS, JavaScript (ES modules)
+- markdown-it
+- DOMPurify
+- KaTeX (auto-render)
+
 ## Live URL
 
 - https://shiroshio.github.io/PersonalRepo/

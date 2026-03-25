@@ -3,80 +3,136 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Personal Report Site</title>
-    <style>
-      :root {
-        --bg: #f5f7fb;
-        --card: #ffffff;
-        --text: #1d2433;
-        --muted: #5a6478;
-        --accent: #1f6feb;
-      }
-
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        margin: 0;
-        font-family: "Segoe UI", "Noto Sans KR", sans-serif;
-        color: var(--text);
-        background: radial-gradient(circle at top right, #dce8ff 0%, var(--bg) 40%);
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        padding: 24px;
-      }
-
-      .card {
-        width: min(760px, 100%);
-        background: var(--card);
-        border-radius: 16px;
-        box-shadow: 0 16px 50px rgba(20, 40, 90, 0.12);
-        padding: 28px;
-      }
-
-      h1 {
-        margin: 0 0 12px;
-        font-size: clamp(1.8rem, 2.5vw, 2.4rem);
-      }
-
-      p {
-        margin: 0 0 10px;
-        line-height: 1.6;
-        color: var(--muted);
-      }
-
-      .links {
-        margin-top: 20px;
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-
-      a {
-        text-decoration: none;
-        color: white;
-        background: var(--accent);
-        padding: 10px 14px;
-        border-radius: 10px;
-        font-weight: 600;
-      }
-
-      a.secondary {
-        background: #2b3550;
-      }
-    </style>
+    <title>과제·연구 리포트 스튜디오</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+    <link rel="stylesheet" href="./assets/css/base.css" />
+    <link rel="stylesheet" href="./assets/css/layout.css" />
+    <link rel="stylesheet" href="./assets/css/editor.css" />
   </head>
   <body>
-    <main class="card">
-      <h1>Personal Report Site</h1>
-      <p>GitHub Pages 배포가 정상적으로 연결되었습니다.</p>
-      <p>이 저장소는 과제 및 연구 리포트 작성/관리 웹사이트로 확장될 예정입니다.</p>
-      <div class="links">
-        <a href="./plan.md">프로젝트 계획서 보기</a>
-        <a class="secondary" href="https://github.com/shiroshio/PersonalRepo" target="_blank" rel="noreferrer">GitHub 저장소</a>
+    <div class="app-shell">
+      <header class="topbar card">
+        <div>
+          <h1>과제·연구 리포트 스튜디오</h1>
+          <p class="phase-note">plan.md 기반 MVP: 카테고리, 리포트 CRUD, Markdown+LaTeX, 백업/복원</p>
+        </div>
+        <span id="sync-status" class="badge status-ok">초기화 완료</span>
+      </header>
+
+      <nav class="nav-tabs card">
+        <button data-view-target="dashboard" class="active">대시보드</button>
+        <button data-view-target="categories">카테고리</button>
+        <button data-view-target="reports">리포트 목록</button>
+        <button data-view-target="editor">에디터</button>
+        <button data-view-target="backup">백업/복원</button>
+      </nav>
+
+      <div class="content-grid">
+        <aside class="side-panel card">
+          <section class="panel-section">
+            <h3>빠른 카테고리 추가</h3>
+            <input id="category-input" type="text" placeholder="예: 딥러닝" />
+            <button id="category-add-btn">카테고리 추가</button>
+          </section>
+
+          <section class="panel-section">
+            <h3>리포트 탐색</h3>
+            <input id="report-search" type="text" placeholder="제목/본문 검색" />
+            <select id="report-category-filter"></select>
+            <button id="report-create-btn">새 리포트 만들기</button>
+            <div id="report-list" class="report-list"></div>
+          </section>
+        </aside>
+
+        <main class="main-panel card">
+          <section class="main-view active" data-view="dashboard">
+            <h2>대시보드</h2>
+            <div class="stats">
+              <article class="stat-card">
+                <h4>카테고리 수</h4>
+                <p id="stats-categories">0</p>
+              </article>
+              <article class="stat-card">
+                <h4>리포트 수</h4>
+                <p id="stats-reports">0</p>
+              </article>
+              <article class="stat-card">
+                <h4>최근 수정</h4>
+                <p id="stats-updated">없음</p>
+              </article>
+            </div>
+            <section class="panel-section">
+              <h3>최근 수정 리포트</h3>
+              <div id="recent-list" class="recent-list"></div>
+            </section>
+          </section>
+
+          <section class="main-view" data-view="categories">
+            <h2>카테고리 관리</h2>
+            <p class="muted">삭제 시 연결 리포트는 미분류로 이동됩니다.</p>
+            <div id="category-list" class="category-list"></div>
+          </section>
+
+          <section class="main-view" data-view="reports">
+            <h2>리포트 목록</h2>
+            <p class="muted">좌측 패널에서 검색/필터 후 편집 버튼으로 이동할 수 있습니다.</p>
+          </section>
+
+          <section class="main-view" data-view="editor">
+            <h2>리포트 에디터</h2>
+            <div class="form-grid">
+              <div class="form-row">
+                <label for="editor-title">제목</label>
+                <input id="editor-title" type="text" placeholder="리포트 제목" />
+              </div>
+              <div class="split">
+                <div class="form-row">
+                  <label for="editor-category">카테고리</label>
+                  <select id="editor-category"></select>
+                </div>
+                <div class="form-row">
+                  <label for="editor-tags">태그 (쉼표 구분)</label>
+                  <input id="editor-tags" type="text" placeholder="vision, experiment" />
+                </div>
+              </div>
+              <div class="inline-actions">
+                <button id="editor-save-btn">수동 저장</button>
+                <button id="editor-export-md-btn" class="secondary">Markdown 내보내기</button>
+                <label class="badge" for="editor-import-md-input">Markdown 가져오기</label>
+                <input id="editor-import-md-input" type="file" accept=".md,text/markdown" hidden />
+                <button id="editor-delete-btn" class="danger">리포트 삭제</button>
+                <span id="editor-updated" class="badge">최근 수정: -</span>
+              </div>
+              <div class="split">
+                <div class="form-row">
+                  <label for="editor-content">본문 (Markdown + LaTeX)</label>
+                  <textarea id="editor-content" placeholder="# 제목\n인라인 수식: $E=mc^2$\n\n블록 수식:\n$$\n\int_a^b f(x)dx\n$$"></textarea>
+                </div>
+                <div class="form-row">
+                  <label>미리보기</label>
+                  <div id="preview" class="preview"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="main-view" data-view="backup">
+            <h2>백업/복원</h2>
+            <div class="inline-actions">
+              <button id="backup-export-btn">전체 데이터 JSON 내보내기</button>
+              <label class="badge" for="backup-import-input">JSON 가져오기</label>
+              <input id="backup-import-input" type="file" accept="application/json,.json" hidden />
+            </div>
+            <p id="backup-message" class="muted">중요 데이터는 주기적으로 백업해 주세요.</p>
+          </section>
+        </main>
       </div>
-    </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.5/dist/purify.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
+    <script type="module" src="./assets/js/app.js"></script>
   </body>
 </html>
