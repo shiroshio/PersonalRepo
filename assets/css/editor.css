@@ -56,10 +56,45 @@ body.focus-mode .panel-section {
   height: 100%;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: #fff;
+  background: var(--surface);
+  color: var(--text-main);
   padding: 24px;
   overflow-y: auto;
   box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.02);
+}
+
+#preview {
+  background: var(--surface);
+  color: var(--text-main);
+}
+
+#preview h1,
+#preview h2,
+#preview h3,
+#preview h4,
+#preview h5,
+#preview h6,
+#preview p,
+#preview li,
+#preview td,
+#preview th,
+#preview strong,
+#preview em {
+  color: var(--text-main);
+}
+
+#preview hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+#preview .katex,
+#preview .katex-display {
+  color: var(--text-main);
+}
+
+[data-theme="dark"] #preview {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.02);
 }
 
 .katex-display {
@@ -129,7 +164,7 @@ body.focus-mode .panel-section {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px 10px;
-  background: #fff;
+  background: var(--surface);
   cursor: pointer;
 }
 
@@ -147,7 +182,7 @@ body.focus-mode .panel-section {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px;
-  background: #fff;
+  background: var(--surface);
   margin: 12px 0;
   overflow: auto;
 }
