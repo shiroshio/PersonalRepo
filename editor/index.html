@@ -8,9 +8,9 @@
     <meta http-equiv="Expires" content="0" />
     <title>과제·연구 리포트 스튜디오</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
-    <link rel="stylesheet" href="./assets/css/base.css?v=20260325d" />
-    <link rel="stylesheet" href="./assets/css/layout.css?v=20260325d" />
-    <link rel="stylesheet" href="./assets/css/editor.css?v=20260325d" />
+    <link rel="stylesheet" href="./assets/css/base.css?v=20260325e" />
+    <link rel="stylesheet" href="./assets/css/layout.css?v=20260325e" />
+    <link rel="stylesheet" href="./assets/css/editor.css?v=20260325e" />
   </head>
   <body>
     <div class="app-layout">
@@ -155,6 +155,9 @@
                 <span id="editor-updated" class="text-muted" style="font-size: 0.85rem;">최근 수정: -</span>
                 <div class="inline-group">
                   <span id="editor-stats" class="badge">0자</span>
+                  <button id="editor-font-down-btn" class="ghost" type="button">A-</button>
+                  <span id="editor-font-size-label" class="badge">15px</span>
+                  <button id="editor-font-up-btn" class="ghost" type="button">A+</button>
                   <button id="editor-toggle-preview-btn" class="ghost">미리보기 닫기</button>
                   <button id="editor-focus-btn" class="ghost">집중 모드</button>
                   <button class="ghost" onclick="window.print()">🖨️ PDF/인쇄</button>
@@ -249,6 +252,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
-    <script defer src="./assets/js/app.js?v=20260325d"></script>
+    <script defer src="./assets/js/app.js?v=20260325e"></script>
   </body>
 </html>

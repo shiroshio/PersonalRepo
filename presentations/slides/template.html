@@ -167,6 +167,19 @@
         border-radius: 8px;
       }
 
+      .reveal .mermaid {
+        border: 1px solid #e2d8c2;
+        border-radius: 10px;
+        background: #f8f3e8;
+        padding: 14px;
+        overflow: auto;
+      }
+
+      .reveal .mermaid svg {
+        max-width: 100%;
+        height: auto;
+      }
+
       .reveal blockquote {
         border-left: 4px solid #d6ccb7;
         padding-left: 14px;
@@ -219,11 +232,12 @@
     <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/markdown/markdown.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/math/math.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
     <script>
       const KEY_REPORTS = "report_app_reports_v1";
       const KEY_RUNTIME_MD = "presentation_runtime_md_v1";
       const KEY_SLIDE_FONT_SIZE = "presentation_slide_font_size_v1";
-      const MIN_FONT_SIZE = 28;
+      const MIN_FONT_SIZE = 18;
       const MAX_FONT_SIZE = 52;
       const rootSection = document.getElementById("markdown-slide-root");
       const reportSelect = document.getElementById("report-select");
@@ -291,6 +305,54 @@
         const source = localStorage.getItem(KEY_RUNTIME_MD) || "# Empty Slide\n\n내용이 없습니다.";
         const blob = new Blob([source], { type: "text/markdown;charset=utf-8" });
         return URL.createObjectURL(blob);
+      }
+
+      function initializeMermaid() {
+        if (!window.mermaid) {
+          return;
+        }
+        window.mermaid.initialize({
+          startOnLoad: false,
+          securityLevel: "strict",
+          theme: "base",
+          themeVariables: {
+            background: "#f8f3e8",
+            primaryTextColor: "#1f2937",
+            lineColor: "#475569",
+            textColor: "#1f2937"
+          }
+        });
+      }
+
+      function renderMermaidBlocks() {
+        if (!window.mermaid) {
+          return;
+        }
+
+        const blocks = Array.from(document.querySelectorAll(".reveal pre code.language-mermaid"));
+        if (blocks.length === 0) {
+          return;
+        }
+
+        const nodes = [];
+        blocks.forEach((code) => {
+          const pre = code.closest("pre");
+          if (!pre) {
+            return;
+          }
+
+          const wrapper = document.createElement("div");
+          wrapper.className = "mermaid";
+          wrapper.textContent = code.textContent || "";
+          pre.replaceWith(wrapper);
+          nodes.push(wrapper);
+        });
+
+        if (nodes.length > 0) {
+          window.mermaid.run({ nodes }).catch(() => {
+            // Keep source text visible on render errors.
+          });
+        }
       }
 
       function initReportSelector() {
@@ -376,7 +438,13 @@
           smartypants: true
         }
       });
-      deck.initialize();
+      initializeMermaid();
+      deck.initialize().then(() => {
+        renderMermaidBlocks();
+      });
+      deck.on("slidechanged", () => {
+        renderMermaidBlocks();
+      });
     </script>
   </body>
 </html>

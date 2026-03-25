@@ -45,7 +45,7 @@ body.focus-mode .panel-section {
   min-height: 0;
   height: 100%;
   font-family: Consolas, "Courier New", monospace;
-  font-size: 0.95rem;
+  font-size: var(--editor-content-font-size, 15px);
   line-height: 1.6;
   resize: none;
 }
@@ -66,6 +66,7 @@ body.focus-mode .panel-section {
 #preview {
   background: var(--surface);
   color: var(--text-main);
+  font-size: var(--editor-preview-font-size, 16px);
 }
 
 #preview h1,

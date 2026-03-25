@@ -3,6 +3,8 @@ const KEY_REPORTS = "report_app_reports_v1";
 const KEY_SETTINGS = "report_app_settings_v1";
 const KEY_GLOBAL_THEME = "integrated_theme_v1";
 const UNCATEGORIZED_ID = "cat-uncategorized";
+const MIN_EDITOR_FONT_SIZE = 12;
+const MAX_EDITOR_FONT_SIZE = 24;
 
 function loadData() {
   return {
@@ -452,6 +454,9 @@ const els = {
   editorTogglePreviewBtn: document.getElementById("editor-toggle-preview-btn"),
   editorFocusBtn: document.getElementById("editor-focus-btn"),
   editorStats: document.getElementById("editor-stats"),
+  editorFontDownBtn: document.getElementById("editor-font-down-btn"),
+  editorFontUpBtn: document.getElementById("editor-font-up-btn"),
+  editorFontSizeLabel: document.getElementById("editor-font-size-label"),
   editorToolbar: document.querySelector(".editor-toolbar"),
   editorInsertPosition: document.getElementById("editor-insert-position"),
   editorLinkTarget: document.getElementById("editor-link-target"),
@@ -473,6 +478,7 @@ function init() {
   const preferredTheme = loadGlobalTheme() || data.settings.theme || "light";
   applyTheme(preferredTheme);
   data.settings.theme = preferredTheme;
+  applyEditorFontSize(Number(data.settings.editorFontSize || 15));
 
   isPreviewOpen = data.settings.previewOpen !== false;
   const savedReportId = data.settings.lastReportId;
@@ -852,6 +858,22 @@ function bindEditorActions() {
       isFocusMode = !isFocusMode;
       document.body.classList.toggle("focus-mode", isFocusMode);
       els.editorFocusBtn.textContent = isFocusMode ? "집중 모드 해제" : "집중 모드";
+    });
+  }
+
+  if (els.editorFontDownBtn) {
+    els.editorFontDownBtn.addEventListener("click", () => {
+      applyEditorFontSize(Number(data.settings.editorFontSize || 15) - 1);
+      saveData(data);
+      setStatus("에디터 글자 크기를 줄였습니다.");
+    });
+  }
+
+  if (els.editorFontUpBtn) {
+    els.editorFontUpBtn.addEventListener("click", () => {
+      applyEditorFontSize(Number(data.settings.editorFontSize || 15) + 1);
+      saveData(data);
+      setStatus("에디터 글자 크기를 키웠습니다.");
     });
   }
 
@@ -1693,6 +1715,16 @@ function findOrCreateCategoryByName(name) {
 
 function setStatus(message) {
   els.syncStatus.textContent = message;
+}
+
+function applyEditorFontSize(size) {
+  const clamped = Math.min(MAX_EDITOR_FONT_SIZE, Math.max(MIN_EDITOR_FONT_SIZE, Number(size) || 15));
+  data.settings.editorFontSize = clamped;
+  document.documentElement.style.setProperty("--editor-content-font-size", `${clamped}px`);
+  document.documentElement.style.setProperty("--editor-preview-font-size", `${clamped + 1}px`);
+  if (els.editorFontSizeLabel) {
+    els.editorFontSizeLabel.textContent = `${clamped}px`;
+  }
 }
 
 function downloadFile(fileName, content, mimeType) {
