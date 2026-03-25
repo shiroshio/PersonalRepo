@@ -145,18 +145,49 @@ const md = window.markdownit({
 });
 
 let mermaidInitialized = false;
+let mermaidThemeMode = null;
+
+function getMermaidThemeMode() {
+  return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+}
 
 function ensureMermaidInitialized() {
-  if (mermaidInitialized || !window.mermaid) {
+  if (!window.mermaid) {
     return;
   }
+
+  const mode = getMermaidThemeMode();
+  if (mermaidInitialized && mermaidThemeMode === mode) {
+    return;
+  }
+
+  const isDark = mode === "dark";
 
   window.mermaid.initialize({
     startOnLoad: false,
     securityLevel: "loose",
-    theme: "default"
+    theme: isDark ? "dark" : "default",
+    themeVariables: isDark
+      ? {
+          darkMode: true,
+          background: "#111827",
+          primaryTextColor: "#e5e7eb",
+          secondaryTextColor: "#cbd5e1",
+          lineColor: "#93c5fd",
+          textColor: "#e5e7eb"
+        }
+      : {
+          darkMode: false,
+          background: "#ffffff",
+          primaryTextColor: "#0f172a",
+          secondaryTextColor: "#334155",
+          lineColor: "#1d4ed8",
+          textColor: "#0f172a"
+        }
   });
+
   mermaidInitialized = true;
+  mermaidThemeMode = mode;
 }
 
 function renderMarkdownAndMath(source, container) {
@@ -247,8 +278,7 @@ function renderMermaidInContainer(container) {
     return;
   }
 
-  const nodes = [];
-  codeBlocks.forEach((code) => {
+  codeBlocks.forEach((code, idx) => {
     const pre = code.closest("pre");
     if (!pre) {
       return;
@@ -256,16 +286,31 @@ function renderMermaidInContainer(container) {
 
     const wrapper = document.createElement("div");
     wrapper.className = "mermaid";
-    wrapper.textContent = code.textContent || "";
-    pre.replaceWith(wrapper);
-    nodes.push(wrapper);
-  });
+    const source = (code.textContent || "")
+      .replace(/\u00a0/g, " ")
+      .replace(/\u200b/g, "")
+      .trim();
 
-  if (nodes.length > 0) {
-    window.mermaid.run({ nodes }).catch(() => {
-      // Keep raw mermaid source visible if rendering fails.
-    });
-  }
+    if (!source) {
+      return;
+    }
+
+    wrapper.textContent = source;
+    pre.replaceWith(wrapper);
+    const renderId = `mermaid-${Date.now()}-${idx}`;
+    window.mermaid
+      .render(renderId, source)
+      .then((result) => {
+        wrapper.innerHTML = result.svg;
+        if (typeof result.bindFunctions === "function") {
+          result.bindFunctions(wrapper);
+        }
+      })
+      .catch(() => {
+        wrapper.classList.add("mermaid-error");
+        wrapper.textContent = source;
+      });
+  });
 }
 
 function reportToMarkdown(report, categoryName) {
@@ -452,6 +497,10 @@ function bindThemeActions() {
     applyTheme(nextTheme);
     data.settings.theme = nextTheme;
     saveData(data);
+    const current = getSelectedReport();
+    if (current) {
+      renderPreview(current.content);
+    }
     updateThemeButtonText();
     setStatus(nextTheme === "dark" ? "다크 모드 적용" : "라이트 모드 적용");
   });
@@ -463,6 +512,7 @@ function getCurrentTheme() {
 
 function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+  mermaidThemeMode = null;
 }
 
 function updateThemeButtonText() {
