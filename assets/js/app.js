@@ -274,11 +274,14 @@ function init() {
 }
 
 function bindNav() {
+  const titleEl = document.getElementById("current-view-title");
   els.navButtons.forEach((button) => {
     button.addEventListener("click", () => {
       currentView = button.dataset.viewTarget;
-      const titleLabel = button.textContent.replace(/[^가-힣a-zA-Z\s\/]/g, '').trim();
-      document.getElementById('current-view-title').textContent = titleLabel;
+      const titleLabel = button.textContent.replace(/[^가-힣a-zA-Z\s\/]/g, "").trim();
+      if (titleEl) {
+        titleEl.textContent = titleLabel;
+      }
       renderViews();
     });
   });
@@ -422,32 +425,38 @@ function bindEditorActions() {
   els.editorTags.addEventListener("input", onInput);
   els.editorContent.addEventListener("input", onInput);
 
-  els.editorTogglePreviewBtn.addEventListener("click", () => {
-    isPreviewOpen = !isPreviewOpen;
-    els.editorLayout.classList.toggle("preview-hidden", !isPreviewOpen);
-    els.editorTogglePreviewBtn.textContent = isPreviewOpen ? "미리보기 닫기" : "미리보기 열기";
-    setStatus(isPreviewOpen ? "미리보기를 열었습니다." : "미리보기를 닫았습니다.");
-  });
+  if (els.editorTogglePreviewBtn && els.editorLayout) {
+    els.editorTogglePreviewBtn.addEventListener("click", () => {
+      isPreviewOpen = !isPreviewOpen;
+      els.editorLayout.classList.toggle("preview-hidden", !isPreviewOpen);
+      els.editorTogglePreviewBtn.textContent = isPreviewOpen ? "미리보기 닫기" : "미리보기 열기";
+      setStatus(isPreviewOpen ? "미리보기를 열었습니다." : "미리보기를 닫았습니다.");
+    });
+  }
 
-  els.editorFocusBtn.addEventListener("click", () => {
-    isFocusMode = !isFocusMode;
-    document.body.classList.toggle("focus-mode", isFocusMode);
-    els.editorFocusBtn.textContent = isFocusMode ? "집중 모드 해제" : "집중 모드";
-  });
+  if (els.editorFocusBtn) {
+    els.editorFocusBtn.addEventListener("click", () => {
+      isFocusMode = !isFocusMode;
+      document.body.classList.toggle("focus-mode", isFocusMode);
+      els.editorFocusBtn.textContent = isFocusMode ? "집중 모드 해제" : "집중 모드";
+    });
+  }
 
-  els.editorToolbar.addEventListener("click", (event) => {
-    const target = event.target;
-    if (!(target instanceof HTMLElement)) {
-      return;
-    }
+  if (els.editorToolbar) {
+    els.editorToolbar.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
 
-    const action = target.dataset.insert;
-    if (!action) {
-      return;
-    }
+      const action = target.dataset.insert;
+      if (!action) {
+        return;
+      }
 
-    applyInsert(action);
-  });
+      applyInsert(action);
+    });
+  }
 
   els.editorSaveBtn.addEventListener("click", () => {
     const report = getSelectedReport();
@@ -710,7 +719,9 @@ function renderEditor() {
     els.editorTags.value = "";
     els.editorContent.value = "";
     els.editorUpdated.textContent = "선택된 리포트 없음";
-    els.editorStats.textContent = "0자 · 0단어 · 0분";
+    if (els.editorStats) {
+      els.editorStats.textContent = "0자 · 0단어 · 0분";
+    }
     els.preview.innerHTML = "<p class='muted'>리포트를 선택하거나 새로 생성해 주세요.</p>";
     return;
   }
@@ -733,6 +744,9 @@ function renderPreview(content) {
 }
 
 function renderEditorStats(content) {
+  if (!els.editorStats) {
+    return;
+  }
   const text = (content || "").trim();
   const charCount = text.length;
   const wordCount = text ? text.split(/\s+/).length : 0;
