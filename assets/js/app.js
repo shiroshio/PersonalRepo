@@ -160,7 +160,8 @@ function ensureMermaidInitialized() {
 }
 
 function renderMarkdownAndMath(source, container) {
-  const html = md.render(preprocessWikiLinks(source || ""));
+  const normalized = normalizeMathDelimiters(source || "");
+  const html = md.render(preprocessWikiLinks(normalized));
   const clean = window.DOMPurify.sanitize(html);
   container.innerHTML = clean;
 
@@ -178,6 +179,10 @@ function renderMarkdownAndMath(source, container) {
   }
 
   renderMermaidInContainer(container);
+}
+
+function normalizeMathDelimiters(source) {
+  return source.replace(/\\\[\s*([\s\S]*?)\s*\\\]/g, (_, expr) => `$$${expr.trim()}$$`);
 }
 
 function preprocessWikiLinks(source) {
@@ -1454,7 +1459,7 @@ function insertMathBlock(latex, position = "cursor") {
   const end = textarea.selectionEnd;
   const selected = textarea.value.slice(start, end).trim();
   const body = position === "replace" && selected ? selected : latex;
-  const block = `\\[ ${body} \\]`;
+  const block = `$$${body}$$`;
 
   let next = textarea.value;
   let cursor = 0;
