@@ -297,14 +297,49 @@
         rootSection.setAttribute("data-markdown", path);
       }
 
+      function createMarkdownBlobUrl(markdownText) {
+        const blob = new Blob([markdownText], { type: "text/markdown;charset=utf-8" });
+        return URL.createObjectURL(blob);
+      }
+
+      function normalizeLatexForSlides(markdownText) {
+        const src = String(markdownText || "");
+
+        // In some Reveal Markdown flows, matrix row separators can lose escaping.
+        // Normalize line-end backslashes inside matrix-like environments to exactly \\\\.
+        return src.replace(
+          /\\begin\{(bmatrix|pmatrix|vmatrix|Bmatrix|matrix|array)\}([\s\S]*?)\\end\{\1\}/g,
+          (full, env, body) => {
+            const fixedBody = body.replace(/\\+\s*(\r?\n)/g, "\\\\\\\\$1");
+            return `\\begin{${env}}${fixedBody}\\end{${env}}`;
+          }
+        );
+      }
+
       function setRuntimeMarkdown(markdownText) {
         localStorage.setItem(KEY_RUNTIME_MD, markdownText || "");
       }
 
       function loadRuntimeMarkdownAsBlob() {
         const source = localStorage.getItem(KEY_RUNTIME_MD) || "# Empty Slide\n\n내용이 없습니다.";
-        const blob = new Blob([source], { type: "text/markdown;charset=utf-8" });
-        return URL.createObjectURL(blob);
+        return createMarkdownBlobUrl(normalizeLatexForSlides(source));
+      }
+
+      async function resolveMarkdownSourceUrl(requestedSource) {
+        if (requestedSource === "runtime") {
+          return loadRuntimeMarkdownAsBlob();
+        }
+
+        try {
+          const response = await fetch(requestedSource, { cache: "no-store" });
+          if (!response.ok) {
+            return requestedSource;
+          }
+          const text = await response.text();
+          return createMarkdownBlobUrl(normalizeLatexForSlides(text));
+        } catch {
+          return requestedSource;
+        }
       }
 
       function initializeMermaid() {
@@ -436,41 +471,42 @@
           .replaceAll("'", "&#039;");
       }
 
-      const requestedSource = params.get("md") || "example.md";
-      if (requestedSource === "runtime") {
-        setMarkdownSource(loadRuntimeMarkdownAsBlob());
-      } else {
-        setMarkdownSource(requestedSource);
+      async function initPresentation() {
+        const requestedSource = params.get("md") || "example.md";
+        const resolvedSource = await resolveMarkdownSourceUrl(requestedSource);
+        setMarkdownSource(resolvedSource);
+
+        initReportSelector();
+        applyFontSize(getSavedFontSize());
+        setToolbarOpen(false);
+
+        toolbarToggleBtn.addEventListener("click", () => {
+          const next = !toolbar.classList.contains("open");
+          setToolbarOpen(next);
+        });
+
+        const deck = new Reveal({
+          hash: true,
+          slideNumber: true,
+          transition: "slide",
+          plugins: [RevealMarkdown, RevealMath.KaTeX],
+          markdown: {
+            smartypants: true
+          }
+        });
+
+        initializeMermaid();
+        await deck.initialize();
+        renderMermaidBlocks();
+        deck.on("ready", () => {
+          renderMermaidBlocks();
+        });
+        deck.on("slidechanged", () => {
+          renderMermaidBlocks();
+        });
       }
 
-      initReportSelector();
-      applyFontSize(getSavedFontSize());
-      setToolbarOpen(false);
-
-      toolbarToggleBtn.addEventListener("click", () => {
-        const next = !toolbar.classList.contains("open");
-        setToolbarOpen(next);
-      });
-
-      const deck = new Reveal({
-        hash: true,
-        slideNumber: true,
-        transition: "slide",
-        plugins: [RevealMarkdown, RevealMath.KaTeX],
-        markdown: {
-          smartypants: true
-        }
-      });
-      initializeMermaid();
-      deck.initialize().then(() => {
-        renderMermaidBlocks();
-      });
-      deck.on("ready", () => {
-        renderMermaidBlocks();
-      });
-      deck.on("slidechanged", () => {
-        renderMermaidBlocks();
-      });
+      initPresentation();
     </script>
   </body>
 </html>
