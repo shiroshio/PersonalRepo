@@ -7,8 +7,8 @@ $f,g \in C(\mathbb{R})$ 이고
 $$
 r(x)=
 \begin{cases}
-f(x), & x\in\mathbb{Q} \\
-g(x), & x\in\mathbb{Q}^c
+f(x), & x\in\mathbb{Q}, \\[4pt]
+g(x), & x\in\mathbb{Q}^c.
 \end{cases}
 $$
 

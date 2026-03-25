@@ -305,10 +305,10 @@
       function normalizeLatexForSlides(markdownText) {
         const src = String(markdownText || "");
 
-        // In some Reveal Markdown flows, matrix row separators can lose escaping.
-        // Normalize line-end backslashes inside matrix-like environments to exactly \\\\.
+        // In some Reveal Markdown flows, row separators can lose escaping.
+        // Normalize line-end backslashes inside common multiline LaTeX environments to exactly \\\\.
         return src.replace(
-          /\\begin\{(bmatrix|pmatrix|vmatrix|Bmatrix|matrix|array)\}([\s\S]*?)\\end\{\1\}/g,
+          /\\begin\{(bmatrix|pmatrix|vmatrix|Bmatrix|matrix|array|cases|aligned|align|split)\}([\s\S]*?)\\end\{\1\}/g,
           (full, env, body) => {
             const fixedBody = body.replace(/\\+\s*(\r?\n)/g, "\\\\\\\\$1");
             return `\\begin{${env}}${fixedBody}\\end{${env}}`;
