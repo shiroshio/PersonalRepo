@@ -191,7 +191,7 @@ function extractMathBlocks(source) {
   const blocks = [];
   const markdown = source.replace(/\$\$([\s\S]*?)\$\$/g, (_, expr) => {
     const idx = blocks.push(expr.trim()) - 1;
-    return `MATHBLOCKTOKEN_${idx}`;
+    return `@@MATH_BLOCK_${idx}@@`;
   });
   return { markdown, blocks };
 }
@@ -204,7 +204,7 @@ function restoreAndRenderMathBlocks(container, blocks) {
   let html = container.innerHTML;
   blocks.forEach((_, idx) => {
     html = html.replaceAll(
-      `MATHBLOCKTOKEN_${idx}`,
+      `@@MATH_BLOCK_${idx}@@`,
       `<span class="math-block" data-math-idx="${idx}"></span>`
     );
   });
