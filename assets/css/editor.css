@@ -6,6 +6,29 @@
   min-height: 500px;
 }
 
+.editor-layout.preview-hidden {
+  grid-template-columns: 1fr;
+}
+
+.editor-layout.preview-hidden #editor-preview-pane {
+  display: none;
+}
+
+body.focus-mode .sidebar,
+body.focus-mode .topbar {
+  display: none;
+}
+
+body.focus-mode .view-container {
+  padding: 12px;
+}
+
+body.focus-mode .panel-section {
+  border: 0;
+  box-shadow: none;
+  padding: 10px;
+}
+
 .editor-pane {
   display: flex;
   flex-direction: column;
@@ -90,4 +113,16 @@
 
 #preview th {
   background: var(--surface-hover);
+}
+
+@media (max-width: 1080px) {
+  .editor-layout {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 0;
+  }
+
+  .editor-pane textarea {
+    min-height: 320px;
+  }
 }

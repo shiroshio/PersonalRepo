@@ -216,6 +216,8 @@ let data = normalizeData(loadData());
 let currentView = "dashboard";
 let selectedReportId = data.reports[0]?.id || null;
 let debounceTimer = null;
+let isPreviewOpen = true;
+let isFocusMode = false;
 
 const els = {
   navButtons: Array.from(document.querySelectorAll("[data-view-target]")),
@@ -243,6 +245,12 @@ const els = {
   editorImportMdInput: document.getElementById("editor-import-md-input"),
   editorTemplate: document.getElementById("editor-template"),
   editorApplyTemplateBtn: document.getElementById("editor-apply-template-btn"),
+  editorLayout: document.getElementById("editor-layout"),
+  editorPreviewPane: document.getElementById("editor-preview-pane"),
+  editorTogglePreviewBtn: document.getElementById("editor-toggle-preview-btn"),
+  editorFocusBtn: document.getElementById("editor-focus-btn"),
+  editorStats: document.getElementById("editor-stats"),
+  editorToolbar: document.querySelector(".editor-toolbar"),
   preview: document.getElementById("preview"),
   backupExportBtn: document.getElementById("backup-export-btn"),
   backupImportInput: document.getElementById("backup-import-input"),
@@ -397,6 +405,7 @@ function bindEditorActions() {
     report.updatedAt = new Date().toISOString();
 
     renderPreview(report.content);
+    renderEditorStats(report.content);
     renderDashboard();
     updateEditorMeta(report);
 
@@ -412,6 +421,33 @@ function bindEditorActions() {
   els.editorCategory.addEventListener("change", onInput);
   els.editorTags.addEventListener("input", onInput);
   els.editorContent.addEventListener("input", onInput);
+
+  els.editorTogglePreviewBtn.addEventListener("click", () => {
+    isPreviewOpen = !isPreviewOpen;
+    els.editorLayout.classList.toggle("preview-hidden", !isPreviewOpen);
+    els.editorTogglePreviewBtn.textContent = isPreviewOpen ? "미리보기 닫기" : "미리보기 열기";
+    setStatus(isPreviewOpen ? "미리보기를 열었습니다." : "미리보기를 닫았습니다.");
+  });
+
+  els.editorFocusBtn.addEventListener("click", () => {
+    isFocusMode = !isFocusMode;
+    document.body.classList.toggle("focus-mode", isFocusMode);
+    els.editorFocusBtn.textContent = isFocusMode ? "집중 모드 해제" : "집중 모드";
+  });
+
+  els.editorToolbar.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    const action = target.dataset.insert;
+    if (!action) {
+      return;
+    }
+
+    applyInsert(action);
+  });
 
   els.editorSaveBtn.addEventListener("click", () => {
     const report = getSelectedReport();
@@ -502,6 +538,7 @@ function bindEditorActions() {
       els.editorContent.value = templateText;
       report.content = templateText;
       renderPreview(templateText);
+      renderEditorStats(templateText);
       report.updatedAt = new Date().toISOString();
       updateEditorMeta(report);
       saveData(data);
@@ -673,6 +710,7 @@ function renderEditor() {
     els.editorTags.value = "";
     els.editorContent.value = "";
     els.editorUpdated.textContent = "선택된 리포트 없음";
+    els.editorStats.textContent = "0자 · 0단어 · 0분";
     els.preview.innerHTML = "<p class='muted'>리포트를 선택하거나 새로 생성해 주세요.</p>";
     return;
   }
@@ -683,6 +721,7 @@ function renderEditor() {
   els.editorContent.value = report.content;
   updateEditorMeta(report);
   renderPreview(report.content);
+  renderEditorStats(report.content);
 }
 
 function updateEditorMeta(report) {
@@ -691,6 +730,68 @@ function updateEditorMeta(report) {
 
 function renderPreview(content) {
   renderMarkdownAndMath(content, els.preview);
+}
+
+function renderEditorStats(content) {
+  const text = (content || "").trim();
+  const charCount = text.length;
+  const wordCount = text ? text.split(/\s+/).length : 0;
+  const readMinutes = Math.max(1, Math.ceil(wordCount / 220));
+  els.editorStats.textContent = `${charCount}자 · ${wordCount}단어 · ${readMinutes}분`;
+}
+
+function applyInsert(action) {
+  const textarea = els.editorContent;
+  if (!textarea) {
+    return;
+  }
+
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const selected = textarea.value.slice(start, end);
+  let before = "";
+  let after = "";
+  let fallback = "";
+
+  if (action === "bold") {
+    before = "**";
+    after = "**";
+    fallback = "굵은 텍스트";
+  } else if (action === "italic") {
+    before = "*";
+    after = "*";
+    fallback = "기울임 텍스트";
+  } else if (action === "h2") {
+    before = "## ";
+    after = "";
+    fallback = "제목";
+  } else if (action === "list") {
+    before = "- ";
+    after = "";
+    fallback = "목록 항목";
+  } else if (action === "code") {
+    before = "```\n";
+    after = "\n```";
+    fallback = "코드";
+  } else if (action === "math") {
+    before = "$$\n";
+    after = "\n$$";
+    fallback = "x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}";
+  } else if (action === "table") {
+    before = "| 항목 | 값 |\n|---|---|\n| 예시 | 입력 |\n";
+    after = "";
+    fallback = "";
+  }
+
+  const content = selected || fallback;
+  const insertText = `${before}${content}${after}`;
+  const next = `${textarea.value.slice(0, start)}${insertText}${textarea.value.slice(end)}`;
+  textarea.value = next;
+  textarea.focus();
+
+  const cursor = start + insertText.length;
+  textarea.setSelectionRange(cursor, cursor);
+  textarea.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
 function getSelectedReport() {
