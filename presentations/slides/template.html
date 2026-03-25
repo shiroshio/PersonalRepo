@@ -201,23 +201,6 @@
         }
       }
 
-      .source-badge {
-        position: fixed;
-        right: 12px;
-        bottom: 12px;
-        z-index: 40;
-        max-width: min(80vw, 560px);
-        background: #111827e6;
-        color: #e5e7eb;
-        border: 1px solid #334155;
-        border-radius: 8px;
-        padding: 6px 10px;
-        font-size: 0.74rem;
-        font-family: Consolas, "Courier New", monospace;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
     </style>
   </head>
   <body>
@@ -237,8 +220,6 @@
       <input id="md-file-input" type="file" accept=".md,text/markdown" hidden />
       <a class="muted" href="?md=example.md">example 로드</a>
     </div>
-
-    <div id="source-badge" class="source-badge"></div>
 
     <div class="reveal">
       <div class="slides">
@@ -274,12 +255,7 @@
       const fontDownBtn = document.getElementById("font-down-btn");
       const fontUpBtn = document.getElementById("font-up-btn");
       const fontSizeText = document.getElementById("font-size-text");
-      const sourceBadge = document.getElementById("source-badge");
       const params = new URLSearchParams(window.location.search);
-
-      function updateSourceBadge(source, mode) {
-        sourceBadge.textContent = `[template ${TEMPLATE_VERSION}] mode=${mode} source=${source}`;
-      }
 
       function clamp(value, min, max) {
         return Math.min(max, Math.max(min, value));
@@ -345,7 +321,6 @@
 
       async function loadMarkdownText(requestedSource) {
         if (requestedSource === "runtime") {
-          updateSourceBadge("localStorage:runtime", "runtime");
           return localStorage.getItem(KEY_RUNTIME_MD) || "# Empty Slide\n\n내용이 없습니다.";
         }
 
@@ -354,15 +329,35 @@
           url.searchParams.set("_t", String(Date.now()));
           const response = await fetch(url.toString(), { cache: "no-store" });
           if (!response.ok) {
-            updateSourceBadge(`${requestedSource} (HTTP ${response.status})`, "error");
             return `# 로드 실패\n\n파일을 찾을 수 없습니다: ${requestedSource}`;
           }
-          updateSourceBadge(requestedSource, "file");
           return await response.text();
         } catch {
-          updateSourceBadge(`${requestedSource} (network error)`, "error");
           return `# 로드 실패\n\n파일을 불러오지 못했습니다: ${requestedSource}`;
         }
+      }
+
+      function forceLowercaseProofTextInDom() {
+        const replacements = [
+          ["(필요조건) R가 A에서 연속이면 F(A)=G(A)", "(필요조건) r가 a에서 연속이면 f(a)=g(a)"],
+          ["(충분조건) F(A)=G(A) 이면 R는 A에서 연속", "(충분조건) f(a)=g(a) 이면 r는 a에서 연속"],
+          ["R가 A에서 연속이면 F(A)=G(A)", "r가 a에서 연속이면 f(a)=g(a)"],
+          ["F(A)=G(A) 이면 R는 A에서 연속", "f(a)=g(a) 이면 r는 a에서 연속"]
+        ];
+
+        const walker = document.createTreeWalker(document.querySelector(".reveal .slides"), NodeFilter.SHOW_TEXT);
+        const textNodes = [];
+        while (walker.nextNode()) {
+          textNodes.push(walker.currentNode);
+        }
+
+        textNodes.forEach((node) => {
+          let text = node.nodeValue;
+          replacements.forEach(([before, after]) => {
+            text = text.replaceAll(before, after);
+          });
+          node.nodeValue = text;
+        });
       }
 
       function renderKatexFallback() {
@@ -540,13 +535,16 @@
 
         initializeMermaid();
         await deck.initialize();
+        forceLowercaseProofTextInDom();
         renderMermaidBlocks();
         renderKatexFallback();
         deck.on("ready", () => {
+          forceLowercaseProofTextInDom();
           renderMermaidBlocks();
           renderKatexFallback();
         });
         deck.on("slidechanged", () => {
+          forceLowercaseProofTextInDom();
           renderMermaidBlocks();
           renderKatexFallback();
         });
