@@ -80,6 +80,17 @@
               <h3>카테고리 목록</h3>
               <p class="text-muted" style="margin-bottom: 16px;">삭제 시 연결된 리포트는 미분류로 이동됩니다.</p>
               <div id="category-list" class="grid-list"></div>
+
+              <div class="panel-section" style="margin-top: 16px;">
+                <h3 id="category-selected-name">카테고리를 선택해 주세요</h3>
+                <p class="text-muted" style="margin: 8px 0 12px;">선택한 카테고리의 리포트를 확인하고 일괄 이동할 수 있습니다.</p>
+                <div class="inline-group" style="margin-bottom: 12px;">
+                  <select id="category-bulk-target"></select>
+                  <button id="category-move-selected-btn" class="secondary">선택 리포트 이동</button>
+                  <button id="category-move-all-btn" class="ghost">전체 리포트 이동</button>
+                </div>
+                <div id="category-report-list" class="grid-list"></div>
+              </div>
             </section>
           </section>
 
@@ -89,6 +100,11 @@
               <div class="inline-group" style="margin-bottom: 24px;">
                 <input id="report-search" type="text" placeholder="검색어 입력..." style="flex:1; max-width: 300px;" />
                 <select id="report-category-filter" style="min-width: 150px;"></select>
+                <input id="report-tag-filter" type="text" placeholder="태그 필터 (예: vision)" style="min-width: 200px;" />
+                <label class="badge" style="gap: 8px;">
+                  <input id="report-show-archived" type="checkbox" />
+                  보관 포함
+                </label>
               </div>
               <div id="report-list" class="grid-list"></div>
             </section>
@@ -115,6 +131,8 @@
               <!-- 템플릿 기능 & 액션 -->
               <div class="inline-group" style="margin-bottom: 24px; padding: 12px; background: #f8fafc; border-radius: 8px;">
                 <button id="editor-save-btn">수동 저장</button>
+                <button id="editor-undo-btn" class="ghost">되돌리기</button>
+                <button id="editor-redo-btn" class="ghost">다시 실행</button>
                 <select id="editor-template" style="margin-left:auto;">
                   <option value="">템플릿 선택...</option>
                   <option value="experiment">실험 보고서</option>
@@ -177,6 +195,10 @@
                 <div class="list-item">
                   <h4>데이터 복원 (가져오기)</h4>
                   <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 16px;">백업해둔 JSON 파일을 불러와 데이터를 덮어씁니다.</p>
+                  <select id="backup-import-mode" style="max-width: 220px;">
+                    <option value="overwrite">복원 모드: 전체 덮어쓰기</option>
+                    <option value="merge">복원 모드: 기존 데이터와 병합</option>
+                  </select>
                   <label class="badge" for="backup-import-input" style="cursor: pointer; padding: 8px 16px; background: var(--primary); color: #fff;">JSON 파일 선택</label>
                   <input id="backup-import-input" type="file" accept="application/json,.json" hidden />
                 </div>

@@ -97,6 +97,8 @@ function normalizeData(rawData) {
         categoryId,
         content: item.content || "",
         tags,
+        pinned: Boolean(item.pinned),
+        archived: Boolean(item.archived),
         createdAt,
         updatedAt
       };
@@ -125,6 +127,8 @@ function makeReport() {
     categoryId: UNCATEGORIZED_ID,
     content: "",
     tags: [],
+    pinned: false,
+    archived: false,
     createdAt: now,
     updatedAt: now
   };
@@ -212,12 +216,29 @@ function guessTitle(content) {
   return first ? first.replace(/^#+\s*/, "").slice(0, 40) : "가져온 리포트";
 }
 
+function suggestTitleFromContent(content) {
+  const first = (content || "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find((line) => line.length > 0 && !line.startsWith("$$") && !line.startsWith("|"));
+
+  if (!first) {
+    return "제목 없음";
+  }
+
+  return first
+    .replace(/^#+\s*/, "")
+    .replace(/^[-*]\s+/, "")
+    .slice(0, 40);
+}
+
 let data = normalizeData(loadData());
 let currentView = "dashboard";
 let selectedReportId = data.reports[0]?.id || null;
 let debounceTimer = null;
 let isPreviewOpen = true;
 let isFocusMode = false;
+let selectedCategoryIdInManager = null;
 
 const els = {
   navButtons: Array.from(document.querySelectorAll("[data-view-target]")),
@@ -230,8 +251,15 @@ const els = {
   categoryInput: document.getElementById("category-input"),
   categoryAddBtn: document.getElementById("category-add-btn"),
   categoryList: document.getElementById("category-list"),
+  categorySelectedName: document.getElementById("category-selected-name"),
+  categoryBulkTarget: document.getElementById("category-bulk-target"),
+  categoryMoveSelectedBtn: document.getElementById("category-move-selected-btn"),
+  categoryMoveAllBtn: document.getElementById("category-move-all-btn"),
+  categoryReportList: document.getElementById("category-report-list"),
   reportSearch: document.getElementById("report-search"),
   reportCategoryFilter: document.getElementById("report-category-filter"),
+  reportTagFilter: document.getElementById("report-tag-filter"),
+  reportShowArchived: document.getElementById("report-show-archived"),
   reportList: document.getElementById("report-list"),
   reportCreateBtn: document.getElementById("report-create-btn"),
   editorTitle: document.getElementById("editor-title"),
@@ -240,6 +268,8 @@ const els = {
   editorContent: document.getElementById("editor-content"),
   editorUpdated: document.getElementById("editor-updated"),
   editorSaveBtn: document.getElementById("editor-save-btn"),
+  editorUndoBtn: document.getElementById("editor-undo-btn"),
+  editorRedoBtn: document.getElementById("editor-redo-btn"),
   editorDeleteBtn: document.getElementById("editor-delete-btn"),
   editorExportMdBtn: document.getElementById("editor-export-md-btn"),
   editorImportMdInput: document.getElementById("editor-import-md-input"),
@@ -253,6 +283,7 @@ const els = {
   editorToolbar: document.querySelector(".editor-toolbar"),
   preview: document.getElementById("preview"),
   backupExportBtn: document.getElementById("backup-export-btn"),
+  backupImportMode: document.getElementById("backup-import-mode"),
   backupImportInput: document.getElementById("backup-import-input"),
   backupMessage: document.getElementById("backup-message")
 };
@@ -260,6 +291,23 @@ const els = {
 init();
 
 function init() {
+  isPreviewOpen = data.settings.previewOpen !== false;
+  const savedReportId = data.settings.lastReportId;
+  if (savedReportId && data.reports.some((r) => r.id === savedReportId)) {
+    selectedReportId = savedReportId;
+  }
+
+  if (els.reportShowArchived) {
+    els.reportShowArchived.checked = Boolean(data.settings.showArchivedInList);
+  }
+
+  if (els.editorLayout) {
+    els.editorLayout.classList.toggle("preview-hidden", !isPreviewOpen);
+  }
+  if (els.editorTogglePreviewBtn) {
+    els.editorTogglePreviewBtn.textContent = isPreviewOpen ? "미리보기 닫기" : "미리보기 열기";
+  }
+
   bindNav();
   bindCategoryActions();
   bindReportListActions();
@@ -316,6 +364,12 @@ function bindCategoryActions() {
       return;
     }
 
+    if (target.matches("[data-action='select-category']")) {
+      selectedCategoryIdInManager = id;
+      renderCategoryReportsManager();
+      return;
+    }
+
     if (target.matches("[data-action='edit-category']")) {
       const category = data.categories.find((item) => item.id === id);
       if (!category) {
@@ -337,6 +391,7 @@ function bindCategoryActions() {
 
       category.name = nextName.trim();
       saveAndRender("카테고리 수정 완료");
+      renderCategoryReportsManager();
     }
 
     if (target.matches("[data-action='delete-category']")) {
@@ -357,8 +412,90 @@ function bindCategoryActions() {
         }
         return report;
       });
+      if (selectedCategoryIdInManager === id) {
+        selectedCategoryIdInManager = getUncategorizedId();
+      }
       saveAndRender("카테고리 삭제 완료");
     }
+  });
+
+  els.categoryReportList.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    const reportId = target.dataset.reportId;
+    if (!reportId) {
+      return;
+    }
+
+    selectedReportId = reportId;
+    data.settings.lastReportId = reportId;
+    currentView = "editor";
+    saveAndRender("리포트를 열었습니다.");
+  });
+
+  els.categoryMoveSelectedBtn.addEventListener("click", () => {
+    if (!selectedCategoryIdInManager) {
+      alert("먼저 카테고리를 선택하세요.");
+      return;
+    }
+
+    const toCategoryId = els.categoryBulkTarget.value;
+    if (!toCategoryId || toCategoryId === selectedCategoryIdInManager) {
+      alert("이동할 다른 카테고리를 선택하세요.");
+      return;
+    }
+
+    const checked = Array.from(
+      els.categoryReportList.querySelectorAll("input[data-report-select]:checked")
+    ).map((item) => item.value);
+
+    if (checked.length === 0) {
+      alert("이동할 리포트를 선택하세요.");
+      return;
+    }
+
+    const now = new Date().toISOString();
+    data.reports = data.reports.map((report) =>
+      checked.includes(report.id) ? { ...report, categoryId: toCategoryId, updatedAt: now } : report
+    );
+
+    saveAndRender(`${checked.length}개 리포트를 이동했습니다.`);
+  });
+
+  els.categoryMoveAllBtn.addEventListener("click", () => {
+    if (!selectedCategoryIdInManager) {
+      alert("먼저 카테고리를 선택하세요.");
+      return;
+    }
+
+    const toCategoryId = els.categoryBulkTarget.value;
+    if (!toCategoryId || toCategoryId === selectedCategoryIdInManager) {
+      alert("이동할 다른 카테고리를 선택하세요.");
+      return;
+    }
+
+    const targets = data.reports.filter((report) => report.categoryId === selectedCategoryIdInManager);
+    if (targets.length === 0) {
+      alert("이동할 리포트가 없습니다.");
+      return;
+    }
+
+    const ok = confirm(`${targets.length}개 리포트를 한번에 이동할까요?`);
+    if (!ok) {
+      return;
+    }
+
+    const now = new Date().toISOString();
+    data.reports = data.reports.map((report) =>
+      report.categoryId === selectedCategoryIdInManager
+        ? { ...report, categoryId: toCategoryId, updatedAt: now }
+        : report
+    );
+
+    saveAndRender(`${targets.length}개 리포트를 이동했습니다.`);
   });
 }
 
@@ -367,12 +504,19 @@ function bindReportListActions() {
     const report = makeReport();
     data.reports.unshift(report);
     selectedReportId = report.id;
+    data.settings.lastReportId = report.id;
     currentView = "editor";
     saveAndRender("리포트 생성 완료");
   });
 
   els.reportSearch.addEventListener("input", () => renderReportList());
   els.reportCategoryFilter.addEventListener("change", () => renderReportList());
+  els.reportTagFilter.addEventListener("input", () => renderReportList());
+  els.reportShowArchived.addEventListener("change", () => {
+    data.settings.showArchivedInList = els.reportShowArchived.checked;
+    saveData(data);
+    renderReportList();
+  });
 
   els.reportList.addEventListener("click", (event) => {
     const target = event.target;
@@ -385,7 +529,44 @@ function bindReportListActions() {
       return;
     }
 
+    const report = data.reports.find((item) => item.id === reportId);
+    if (!report) {
+      return;
+    }
+
+    if (target.matches("[data-action='toggle-pin']")) {
+      report.pinned = !report.pinned;
+      report.updatedAt = new Date().toISOString();
+      saveAndRender(report.pinned ? "리포트를 고정했습니다." : "리포트 고정을 해제했습니다.");
+      return;
+    }
+
+    if (target.matches("[data-action='toggle-archive']")) {
+      report.archived = !report.archived;
+      report.updatedAt = new Date().toISOString();
+      saveAndRender(report.archived ? "리포트를 보관했습니다." : "리포트를 복원했습니다.");
+      return;
+    }
+
+    if (target.matches("[data-action='clone-report']")) {
+      const clone = {
+        ...report,
+        id: `rep-${crypto.randomUUID()}`,
+        title: `${report.title} (복제본)`,
+        pinned: false,
+        archived: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      data.reports.unshift(clone);
+      selectedReportId = clone.id;
+      data.settings.lastReportId = clone.id;
+      saveAndRender("리포트를 복제했습니다.");
+      return;
+    }
+
     selectedReportId = reportId;
+    data.settings.lastReportId = reportId;
     currentView = "editor";
     renderAll();
   });
@@ -405,6 +586,15 @@ function bindEditorActions() {
       .map((v) => v.trim())
       .filter(Boolean);
     report.content = els.editorContent.value;
+
+    if (!els.editorTitle.value.trim() || els.editorTitle.value.trim() === "새 리포트" || els.editorTitle.value.trim() === "제목 없음") {
+      const suggestedTitle = suggestTitleFromContent(report.content);
+      if (suggestedTitle) {
+        report.title = suggestedTitle;
+        els.editorTitle.value = suggestedTitle;
+      }
+    }
+
     report.updatedAt = new Date().toISOString();
 
     renderPreview(report.content);
@@ -430,6 +620,8 @@ function bindEditorActions() {
       isPreviewOpen = !isPreviewOpen;
       els.editorLayout.classList.toggle("preview-hidden", !isPreviewOpen);
       els.editorTogglePreviewBtn.textContent = isPreviewOpen ? "미리보기 닫기" : "미리보기 열기";
+      data.settings.previewOpen = isPreviewOpen;
+      saveData(data);
       setStatus(isPreviewOpen ? "미리보기를 열었습니다." : "미리보기를 닫았습니다.");
     });
   }
@@ -439,6 +631,22 @@ function bindEditorActions() {
       isFocusMode = !isFocusMode;
       document.body.classList.toggle("focus-mode", isFocusMode);
       els.editorFocusBtn.textContent = isFocusMode ? "집중 모드 해제" : "집중 모드";
+    });
+  }
+
+  if (els.editorUndoBtn) {
+    els.editorUndoBtn.addEventListener("click", () => {
+      els.editorContent.focus();
+      document.execCommand("undo");
+      els.editorContent.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  }
+
+  if (els.editorRedoBtn) {
+    els.editorRedoBtn.addEventListener("click", () => {
+      els.editorContent.focus();
+      document.execCommand("redo");
+      els.editorContent.dispatchEvent(new Event("input", { bubbles: true }));
     });
   }
 
@@ -458,6 +666,40 @@ function bindEditorActions() {
     });
   }
 
+  document.addEventListener("keydown", (event) => {
+    if (!event.ctrlKey) {
+      return;
+    }
+
+    if (currentView !== "editor") {
+      return;
+    }
+
+    const key = event.key.toLowerCase();
+    if (key === "s") {
+      event.preventDefault();
+      els.editorSaveBtn.click();
+      return;
+    }
+
+    if (key === "b") {
+      event.preventDefault();
+      applyInsert("bold");
+      return;
+    }
+
+    if (key === "i") {
+      event.preventDefault();
+      applyInsert("italic");
+      return;
+    }
+
+    if (key === "/") {
+      event.preventDefault();
+      applyInsert("math");
+    }
+  });
+
   els.editorSaveBtn.addEventListener("click", () => {
     const report = getSelectedReport();
     if (!report) {
@@ -465,6 +707,7 @@ function bindEditorActions() {
     }
 
     report.updatedAt = new Date().toISOString();
+    data.settings.lastReportId = report.id;
     saveAndRender("수동 저장 완료");
   });
 
@@ -515,8 +758,36 @@ function bindEditorActions() {
 
     data.reports.unshift(report);
     selectedReportId = report.id;
+    data.settings.lastReportId = report.id;
     event.target.value = "";
     saveAndRender("Markdown 가져오기 완료");
+  });
+
+  [els.editorContent, els.preview].forEach((zone) => {
+    zone.addEventListener("dragover", (event) => {
+      event.preventDefault();
+    });
+
+    zone.addEventListener("drop", async (event) => {
+      event.preventDefault();
+      const file = event.dataTransfer?.files?.[0];
+      if (!file || !file.name.toLowerCase().endsWith(".md")) {
+        return;
+      }
+
+      const text = await file.text();
+      const draft = markdownToDraft(text);
+      const report = makeReport();
+      report.title = draft.title || report.title;
+      report.content = draft.content;
+      report.tags = draft.tags;
+      report.categoryId = findOrCreateCategoryByName(draft.categoryName || "미분류");
+
+      data.reports.unshift(report);
+      selectedReportId = report.id;
+      data.settings.lastReportId = report.id;
+      saveAndRender("드래그 앤 드롭으로 Markdown을 가져왔습니다.");
+    });
   });
 
   els.editorApplyTemplateBtn.addEventListener("click", () => {
@@ -559,7 +830,8 @@ function bindEditorActions() {
 function bindBackupActions() {
   els.backupExportBtn.addEventListener("click", () => {
     const text = exportJson(data);
-    const stamp = new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}-${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
     downloadFile(`report-backup-${stamp}.json`, text, "application/json;charset=utf-8");
     els.backupMessage.textContent = "JSON 백업 파일을 생성했습니다.";
   });
@@ -572,17 +844,63 @@ function bindBackupActions() {
 
     try {
       const text = await file.text();
-      data = normalizeData(importJson(text));
-      selectedReportId = data.reports[0]?.id || null;
+      const imported = normalizeData(importJson(text));
+      if (els.backupImportMode?.value === "merge") {
+        mergeImportedData(imported);
+      } else {
+        data = imported;
+      }
+
+      selectedReportId = data.settings.lastReportId || data.reports[0]?.id || null;
       saveData(data);
       renderAll();
-      els.backupMessage.textContent = "복원 완료: 데이터가 반영되었습니다.";
+      els.backupMessage.textContent = els.backupImportMode?.value === "merge"
+        ? "병합 복원 완료: 기존 데이터에 추가되었습니다."
+        : "복원 완료: 데이터가 반영되었습니다.";
       setStatus("백업 복원 완료");
     } catch (error) {
       els.backupMessage.textContent = `복원 실패: ${error.message}`;
     } finally {
       event.target.value = "";
     }
+  });
+}
+
+function mergeImportedData(imported) {
+  const existingCategoryByName = new Map(data.categories.map((cat) => [cat.name.toLowerCase(), cat.id]));
+  const importCategoryById = new Map(imported.categories.map((cat) => [cat.id, cat]));
+  const categoryIdMap = new Map();
+
+  imported.categories.forEach((category) => {
+    const key = category.name.toLowerCase();
+    const existingId = existingCategoryByName.get(key);
+    if (existingId) {
+      categoryIdMap.set(category.id, existingId);
+      return;
+    }
+
+    const next = makeCategory(category.name);
+    data.categories.push(next);
+    existingCategoryByName.set(key, next.id);
+    categoryIdMap.set(category.id, next.id);
+  });
+
+  imported.reports.forEach((report) => {
+    const sourceCategory = importCategoryById.get(report.categoryId);
+    const mappedCategoryId = categoryIdMap.get(report.categoryId)
+      || (sourceCategory ? findOrCreateCategoryByName(sourceCategory.name) : getUncategorizedId());
+
+    const cloned = {
+      ...report,
+      id: `rep-${crypto.randomUUID()}`,
+      title: report.title || "가져온 리포트",
+      categoryId: mappedCategoryId,
+      updatedAt: report.updatedAt || new Date().toISOString(),
+      createdAt: report.createdAt || new Date().toISOString(),
+      pinned: Boolean(report.pinned),
+      archived: Boolean(report.archived)
+    };
+    data.reports.unshift(cloned);
   });
 }
 
@@ -596,6 +914,7 @@ function renderAll() {
   data = normalizeData(data);
   renderViews();
   renderCategories();
+  renderCategoryReportsManager();
   renderReportFilter();
   renderReportList();
   renderEditor();
@@ -640,21 +959,76 @@ function renderDashboard() {
 }
 
 function renderCategories() {
+  if (!selectedCategoryIdInManager || !data.categories.some((c) => c.id === selectedCategoryIdInManager)) {
+    selectedCategoryIdInManager = data.categories[0]?.id || null;
+  }
+
   els.categoryList.innerHTML = data.categories
     .map((category) => {
       const linkedCount = data.reports.filter((r) => r.categoryId === category.id).length;
       const isFixed = category.id === getUncategorizedId();
+      const activeClass = selectedCategoryIdInManager === category.id ? "active" : "";
       return `
-        <div class="list-item">
+        <div class="list-item ${activeClass}">
           <strong>${escapeHtml(category.name)}</strong>
           <span class="badge">리포트 ${linkedCount}개</span>
           <div class="list-actions">
+            <button class="secondary" data-action="select-category" data-category-id="${category.id}">리포트 보기</button>
             <button class="ghost" data-action="edit-category" data-category-id="${category.id}" ${isFixed ? "disabled" : ""}>이름 변경</button>
             <button class="danger" data-action="delete-category" data-category-id="${category.id}" ${isFixed ? "disabled" : ""}>삭제</button>
           </div>
         </div>
       `;
     })
+    .join("");
+}
+
+function renderCategoryReportsManager() {
+  if (!selectedCategoryIdInManager) {
+    els.categorySelectedName.textContent = "카테고리를 선택해 주세요";
+    els.categoryReportList.innerHTML = "<p class='text-muted'>선택된 카테고리가 없습니다.</p>";
+    return;
+  }
+
+  const current = data.categories.find((c) => c.id === selectedCategoryIdInManager);
+  if (!current) {
+    return;
+  }
+
+  els.categorySelectedName.textContent = `선택 카테고리: ${current.name}`;
+
+  els.categoryBulkTarget.innerHTML = data.categories
+    .filter((c) => c.id !== selectedCategoryIdInManager)
+    .map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`)
+    .join("");
+
+  const reports = data.reports
+    .filter((report) => report.categoryId === selectedCategoryIdInManager)
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+  if (reports.length === 0) {
+    els.categoryReportList.innerHTML = "<p class='text-muted'>이 카테고리에 리포트가 없습니다.</p>";
+    return;
+  }
+
+  els.categoryReportList.innerHTML = reports
+    .map(
+      (report) => `
+        <article class="list-item">
+          <div class="list-header">
+            <strong>${escapeHtml(report.title)}</strong>
+            <label class="badge">
+              <input type="checkbox" data-report-select value="${report.id}" />
+              선택
+            </label>
+          </div>
+          <span class="text-muted">${new Date(report.updatedAt).toLocaleString("ko-KR")}</span>
+          <div class="list-actions">
+            <button class="ghost" data-report-id="${report.id}">열기</button>
+          </div>
+        </article>
+      `
+    )
     .join("");
 }
 
@@ -673,16 +1047,25 @@ function renderReportFilter() {
 
 function renderReportList() {
   const keyword = els.reportSearch.value.trim().toLowerCase();
+  const tagKeyword = els.reportTagFilter.value.trim().toLowerCase();
   const categoryFilter = els.reportCategoryFilter.value || "all";
+  const showArchived = Boolean(els.reportShowArchived.checked);
 
   const filtered = data.reports
     .filter((report) => {
       const passCategory = categoryFilter === "all" || report.categoryId === categoryFilter;
       const hay = `${report.title}\n${report.content}`.toLowerCase();
       const passKeyword = !keyword || hay.includes(keyword);
-      return passCategory && passKeyword;
+      const passTag = !tagKeyword || report.tags.join(" ").toLowerCase().includes(tagKeyword);
+      const passArchived = showArchived ? true : !report.archived;
+      return passCategory && passKeyword && passTag && passArchived;
     })
-    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    .sort((a, b) => {
+      if (a.pinned !== b.pinned) {
+        return a.pinned ? -1 : 1;
+      }
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    });
 
   if (filtered.length === 0) {
     els.reportList.innerHTML = "<p class='muted'>조건에 맞는 리포트가 없습니다.</p>";
@@ -695,10 +1078,18 @@ function renderReportList() {
       return `
         <article class="list-item ${activeClass}" data-report-id="${report.id}">
           <strong>${escapeHtml(report.title)}</strong>
+          <div class="report-meta-row">
+            ${report.pinned ? '<span class="chip">고정됨</span>' : ""}
+            ${report.archived ? '<span class="chip">보관됨</span>' : ""}
+            ${report.tags.map((tag) => `<span class="chip">#${escapeHtml(tag)}</span>`).join("")}
+          </div>
           <span class="muted">${escapeHtml(getCategoryName(report.categoryId))}</span>
           <span class="muted">${new Date(report.updatedAt).toLocaleString("ko-KR")}</span>
           <div class="list-actions">
             <button class="ghost" data-report-id="${report.id}">편집</button>
+            <button class="ghost" data-action="toggle-pin" data-report-id="${report.id}">${report.pinned ? "고정해제" : "고정"}</button>
+            <button class="ghost" data-action="clone-report" data-report-id="${report.id}">복제</button>
+            <button class="danger" data-action="toggle-archive" data-report-id="${report.id}">${report.archived ? "복원" : "보관"}</button>
           </div>
         </article>
       `;
@@ -727,6 +1118,7 @@ function renderEditor() {
   }
 
   els.editorTitle.value = report.title;
+  data.settings.lastReportId = report.id;
   els.editorCategory.value = report.categoryId;
   els.editorTags.value = report.tags.join(", ");
   els.editorContent.value = report.content;

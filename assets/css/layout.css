@@ -191,6 +191,20 @@
   gap: 12px;
 }
 
+.report-meta-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  font-size: 0.78rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #334155;
+}
+
 /* 통계 카드 */
 .stat-card {
   border: 1px solid var(--border);
