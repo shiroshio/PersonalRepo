@@ -3,251 +3,160 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-    <title>과제·연구 리포트 스튜디오</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
-    <link rel="stylesheet" href="./assets/css/base.css?v=20260325c" />
-    <link rel="stylesheet" href="./assets/css/layout.css?v=20260325c" />
-    <link rel="stylesheet" href="./assets/css/editor.css?v=20260325c" />
+    <title>개인 통합 웹사이트</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap");
+
+      :root {
+        --bg: #f6f6ef;
+        --ink: #172033;
+        --muted: #5f6a80;
+        --card: #fffef8;
+        --line: #d8d3bf;
+        --accent: #c2410c;
+        --accent-2: #0f766e;
+        --shadow: 0 14px 28px rgb(23 32 51 / 0.08);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 90% -10%, rgb(194 65 12 / 0.16), transparent 35%),
+          radial-gradient(circle at 0% 90%, rgb(15 118 110 / 0.14), transparent 32%),
+          var(--bg);
+        font-family: "IBM Plex Sans KR", sans-serif;
+      }
+
+      .wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 56px 20px 72px;
+      }
+
+      .hero {
+        border: 1px solid var(--line);
+        background: linear-gradient(140deg, #fffef7, #fff8e7);
+        border-radius: 20px;
+        padding: 34px;
+        box-shadow: var(--shadow);
+      }
+
+      .eyebrow {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #fff;
+        border: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      h1 {
+        margin: 14px 0 10px;
+        font-family: "Space Grotesk", sans-serif;
+        font-size: clamp(2rem, 3.2vw, 3rem);
+      }
+
+      .lead {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .grid {
+        margin-top: 26px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 20px;
+        background: var(--card);
+        text-decoration: none;
+        color: inherit;
+        transition: transform 180ms ease, box-shadow 180ms ease;
+      }
+
+      .card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow);
+      }
+
+      .card h2 {
+        margin: 0 0 10px;
+        font-size: 1.15rem;
+      }
+
+      .card p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .chip {
+        margin-top: 14px;
+        display: inline-block;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+
+      .c-editor { color: var(--accent); }
+      .c-presentation { color: var(--accent-2); }
+      .c-project { color: #334155; }
+
+      footer {
+        margin-top: 24px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 900px) {
+        .grid { grid-template-columns: 1fr; }
+        .wrap { padding-top: 32px; }
+      }
+    </style>
   </head>
   <body>
-    <div class="app-layout">
-      <!-- 사이드바 네비게이션 -->
-      <aside class="sidebar">
-        <div class="sidebar-header">
-          <div class="sidebar-brand">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            리포트 스튜디오
-          </div>
-          <div class="sidebar-brand-sub">개인 연구용 Markdown 에디터</div>
+    <div class="wrap">
+      <section class="hero">
+        <span class="eyebrow">Integrated Workspace</span>
+        <h1>개인 통합 웹사이트</h1>
+        <p class="lead">
+          발표 자료, 연구 에디터, 실험용 프로젝트를 하나의 포털에서 관리합니다.
+          아래 카드에서 하위 웹사이트로 이동하세요.
+        </p>
+
+        <div class="grid">
+          <a class="card" href="./editor/">
+            <h2>리포트 에디터</h2>
+            <p>Markdown + LaTeX + Mermaid 기반 연구 리포트 작성/관리 웹앱.</p>
+            <span class="chip c-editor">OPEN /editor/</span>
+          </a>
+
+          <a class="card" href="./presentations/">
+            <h2>발표자료 모음</h2>
+            <p>세미나, 수업, 연구 발표 슬라이드 자료를 정리하는 공간.</p>
+            <span class="chip c-presentation">OPEN /presentations/</span>
+          </a>
+
+          <a class="card" href="./projects/">
+            <h2>기타 웹사이트</h2>
+            <p>실험용 도구, 데모 페이지 등 추가 프로젝트를 확장할 공간.</p>
+            <span class="chip c-project">OPEN /projects/</span>
+          </a>
         </div>
-        <nav class="sidebar-nav">
-          <button data-view-target="dashboard" class="active">📊 대시보드</button>
-          <button data-view-target="categories">📁 카테고리 관리</button>
-          <button data-view-target="reports">🗂️ 리포트 목록</button>
-          <button data-view-target="editor">✍️ 에디터</button>
-          <button data-view-target="backup">⚙️ 설정 및 백업</button>
-        </nav>
-        <div class="sidebar-footer">
-          <button id="report-create-btn">➕ 새 리포트 만들기</button>
-        </div>
-      </aside>
+      </section>
 
-      <!-- 메인 컨텐츠 영역 -->
-      <main class="main-content">
-        <header class="topbar">
-          <h2 id="current-view-title" style="margin:0;">대시보드</h2>
-          <div class="inline-group">
-            <button id="theme-toggle-btn" class="ghost">다크 모드</button>
-            <span id="sync-status" class="badge status-ok">초기화 완료</span>
-          </div>
-        </header>
-
-        <div class="view-container">
-          <!-- 대시보드 뷰 -->
-          <section class="main-view active" data-view="dashboard">
-            <div class="split-3">
-              <article class="stat-card">
-                <h4>분류된 카테고리</h4>
-                <p id="stats-categories">0</p>
-              </article>
-              <article class="stat-card">
-                <h4>작성된 리포트</h4>
-                <p id="stats-reports">0</p>
-              </article>
-              <article class="stat-card">
-                <h4>최근 업데이트</h4>
-                <p id="stats-updated" style="font-size:1.1rem;margin-top:8px;">없음</p>
-              </article>
-            </div>
-            <section class="panel-section">
-              <div class="list-header">
-                <h3>최근 수정 리포트</h3>
-              </div>
-              <div id="recent-list" class="grid-list" style="margin-top: 16px;"></div>
-            </section>
-          </section>
-
-          <!-- 카테고리 관리 뷰 -->
-          <section class="main-view" data-view="categories">
-            <section class="panel-section">
-              <div class="form-row" style="max-width: 400px; margin-bottom: 24px;">
-                <label for="category-input">새 카테고리 추가</label>
-                <div class="inline-group">
-                  <input id="category-input" type="text" placeholder="예: 데이터 분석" style="flex:1;" />
-                  <button id="category-add-btn">추가</button>
-                </div>
-              </div>
-              <h3>카테고리 목록</h3>
-              <p class="text-muted" style="margin-bottom: 16px;">삭제 시 연결된 리포트는 미분류로 이동됩니다.</p>
-              <div id="category-list" class="grid-list"></div>
-
-              <div class="panel-section" style="margin-top: 16px;">
-                <h3 id="category-selected-name">카테고리를 선택해 주세요</h3>
-                <p class="text-muted" style="margin: 8px 0 12px;">선택한 카테고리의 리포트를 확인하고 일괄 이동할 수 있습니다.</p>
-                <div class="inline-group" style="margin-bottom: 12px;">
-                  <select id="category-bulk-target"></select>
-                  <button id="category-move-selected-btn" class="secondary">선택 리포트 이동</button>
-                  <button id="category-move-all-btn" class="ghost">전체 리포트 이동</button>
-                </div>
-                <div id="category-report-list" class="grid-list"></div>
-              </div>
-            </section>
-          </section>
-
-          <!-- 리포트 목록 뷰 -->
-          <section class="main-view" data-view="reports">
-            <section class="panel-section">
-              <div class="inline-group" style="margin-bottom: 24px;">
-                <input id="report-search" type="text" placeholder="검색어 입력..." style="flex:1; max-width: 300px;" />
-                <select id="report-category-filter" style="min-width: 150px;"></select>
-                <input id="report-tag-filter" type="text" placeholder="태그 필터 (예: vision)" style="min-width: 200px;" />
-                <label class="badge" style="gap: 8px;">
-                  <input id="report-show-archived" type="checkbox" />
-                  보관 포함
-                </label>
-              </div>
-              <div id="report-list" class="grid-list"></div>
-            </section>
-          </section>
-
-          <!-- 에디터 뷰 -->
-          <section class="main-view" data-view="editor">
-            <div class="panel-section" style="padding: 24px;">
-              <div class="form-row" style="margin-bottom: 20px;">
-                <label for="editor-title" style="font-size: 1.1rem;">리포트 제목</label>
-                <input id="editor-title" type="text" placeholder="리포트 제목을 입력하세요" style="font-size: 1.25rem; font-weight: 600;" />
-              </div>
-              <div class="split-2" style="margin-bottom: 20px;">
-                <div class="form-row">
-                  <label for="editor-category">분류 카테고리</label>
-                  <select id="editor-category"></select>
-                </div>
-                <div class="form-row">
-                  <label for="editor-tags">태그 (쉼표 구분)</label>
-                  <input id="editor-tags" type="text" placeholder="예: vision, experiment" />
-                </div>
-              </div>
-
-              <!-- 템플릿 기능 & 액션 -->
-              <div class="inline-group" style="margin-bottom: 24px; padding: 12px; background: var(--surface-hover); border: 1px solid var(--border); border-radius: 8px;">
-                <button id="editor-save-btn">수동 저장</button>
-                <button id="editor-undo-btn" class="ghost">되돌리기</button>
-                <button id="editor-redo-btn" class="ghost">다시 실행</button>
-                <select id="editor-template" style="margin-left:auto;">
-                  <option value="">템플릿 선택...</option>
-                  <option value="experiment">실험 보고서</option>
-                  <option value="literature">문헌 리뷰</option>
-                  <option value="meeting">회의록</option>
-                </select>
-                <button id="editor-apply-template-btn" class="ghost">적용</button>
-                <div style="border-left: 1px solid var(--border); height: 24px; margin: 0 8px;"></div>
-                <button id="editor-export-md-btn" class="secondary">내보내기 (.md)</button>
-                <label class="badge" for="editor-import-md-input" style="cursor: pointer;">가져오기</label>
-                <input id="editor-import-md-input" type="file" accept=".md,text/markdown" hidden />
-                <button id="editor-delete-btn" class="danger" style="margin-left: 8px;">삭제</button>
-              </div>
-              
-              <div class="inline-group" style="margin-bottom: 12px; justify-content: space-between;">
-                <span id="editor-updated" class="text-muted" style="font-size: 0.85rem;">최근 수정: -</span>
-                <div class="inline-group">
-                  <span id="editor-stats" class="badge">0자</span>
-                  <button id="editor-toggle-preview-btn" class="ghost">미리보기 닫기</button>
-                  <button id="editor-focus-btn" class="ghost">집중 모드</button>
-                  <button class="ghost" onclick="window.print()">🖨️ PDF/인쇄</button>
-                </div>
-              </div>
-
-              <div class="inline-group editor-toolbar" style="margin-bottom: 12px;">
-                <button type="button" class="ghost" data-insert="h2">제목</button>
-                <button type="button" class="ghost" data-insert="bold">굵게</button>
-                <button type="button" class="ghost" data-insert="italic">기울임</button>
-                <button type="button" class="ghost" data-insert="list">목록</button>
-                <button type="button" class="ghost" data-insert="code">코드블록</button>
-                <button type="button" class="ghost" data-insert="math">수식</button>
-                <button type="button" class="ghost" data-insert="table">표</button>
-                <select id="editor-insert-position" style="min-width: 170px;">
-                  <option value="cursor">삽입 위치: 커서</option>
-                  <option value="replace">삽입 위치: 선택 대체</option>
-                  <option value="start">삽입 위치: 문서 시작</option>
-                  <option value="end">삽입 위치: 문서 끝</option>
-                </select>
-                <select id="editor-link-target" style="min-width: 200px;"></select>
-                <button type="button" id="editor-insert-link-btn" class="secondary">내부 링크 삽입</button>
-                <select id="editor-math-template" style="min-width: 200px;">
-                  <option value="">수식 템플릿 선택...</option>
-                  <option value="matrix2x2">복소수 포함 2x2 행렬</option>
-                  <option value="matrix3x3">3x3 행렬</option>
-                  <option value="integral-single">정적분</option>
-                  <option value="integral-double">이중적분</option>
-                  <option value="derivative-single">1차 미분</option>
-                  <option value="derivative-partial">편미분</option>
-                </select>
-                <button type="button" id="editor-insert-math-template-btn" class="secondary">수식 템플릿 삽입</button>
-              </div>
-
-              <div class="editor-layout" id="editor-layout">
-                <div class="editor-pane">
-                  <label for="editor-content" style="margin-bottom:8px;font-weight:600;">작성 영역 (Markdown & LaTeX)</label>
-                  <textarea id="editor-content" placeholder="이곳에 마크다운과 수식을 작성하세요."></textarea>
-                </div>
-                <div class="editor-pane" id="editor-preview-pane">
-                  <label style="margin-bottom:8px;font-weight:600;">미리보기 (실시간 렌더링)</label>
-                  <div id="preview" class="preview-wrapper"></div>
-                </div>
-              </div>
-
-              <div class="split-2 editor-links-row" style="margin-top: 14px;">
-                <section class="panel-section">
-                  <h4>연결 문서 (Outgoing)</h4>
-                  <div id="editor-outgoing-links" class="grid-list" style="margin-top: 10px;"></div>
-                </section>
-                <section class="panel-section">
-                  <h4>백링크 (Backlinks)</h4>
-                  <div id="editor-backlinks" class="grid-list" style="margin-top: 10px;"></div>
-                </section>
-              </div>
-            </div>
-          </section>
-
-          <!-- 설정 및 백업 뷰 -->
-          <section class="main-view" data-view="backup">
-            <section class="panel-section">
-              <h3>데이터 백업/복원</h3>
-              <p class="text-muted" style="margin-bottom: 24px;">모든 데이터는 브라우저 내부에만 저장됩니다. 중요 데이터는 주기적으로 JSON으로 내보내어 안전하게 보관하세요.</p>
-              
-              <div class="split-2">
-                <div class="list-item">
-                  <h4>전체 백업 (내보내기)</h4>
-                  <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 16px;">모든 카테고리와 리포트를 하나의 JSON 파일로 다운로드합니다.</p>
-                  <button id="backup-export-btn" style="align-self: flex-start;">JSON 백업 내보내기</button>
-                </div>
-                <div class="list-item">
-                  <h4>데이터 복원 (가져오기)</h4>
-                  <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 16px;">백업해둔 JSON 파일을 불러와 데이터를 덮어씁니다.</p>
-                  <select id="backup-import-mode" style="max-width: 220px;">
-                    <option value="overwrite">복원 모드: 전체 덮어쓰기</option>
-                    <option value="merge">복원 모드: 기존 데이터와 병합</option>
-                  </select>
-                  <label class="badge" for="backup-import-input" style="cursor: pointer; padding: 8px 16px; background: var(--primary); color: #fff;">JSON 파일 선택</label>
-                  <input id="backup-import-input" type="file" accept="application/json,.json" hidden />
-                </div>
-              </div>
-              <p id="backup-message" style="margin-top: 16px; font-weight: 500;"></p>
-            </section>
-          </section>
-
-        </div>
-      </main>
+      <footer>
+        GitHub Pages 기준 URL: https://shiroshio.github.io/PersonalRepo/
+      </footer>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.5/dist/purify.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
-    <script defer src="./assets/js/app.js?v=20260325c"></script>
   </body>
 </html>

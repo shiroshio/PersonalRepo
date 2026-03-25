@@ -1,6 +1,6 @@
 # PersonalRepo
 
-Personal Report Site
+Integrated Personal Web Portal
 
 ## MVP Scope
 
@@ -10,10 +10,18 @@ Personal Report Site
 - Report Markdown export/import
 - Full JSON backup/restore
 
+## Site Structure
+
+- Portal: `/` (integrated landing page)
+- Report Editor: `/editor/`
+- Presentations: `/presentations/`
+- Projects: `/projects/`
+
 ## Local Run
 
-- Open `index.html` directly in a browser, or
-- Serve the repository root with any static server
+- Open `index.html` in repository root to access the integrated portal
+- Open `editor/index.html` to run the report editor directly
+- Or serve the repository root with any static server
 
 ## Documentation
 
@@ -28,7 +36,8 @@ Personal Report Site
 
 ## Live URL
 
-- https://shiroshio.github.io/PersonalRepo/
+- Portal: <https://shiroshio.github.io/PersonalRepo/>
+- Editor: <https://shiroshio.github.io/PersonalRepo/editor/>
 
 ## Deployment
 
