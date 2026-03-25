@@ -3,6 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>Markdown Presentation Template</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css" id="theme" />
@@ -197,6 +200,24 @@
           margin-top: 78px;
         }
       }
+
+      .source-badge {
+        position: fixed;
+        right: 12px;
+        bottom: 12px;
+        z-index: 40;
+        max-width: min(80vw, 560px);
+        background: #111827e6;
+        color: #e5e7eb;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-size: 0.74rem;
+        font-family: Consolas, "Courier New", monospace;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
     </style>
   </head>
   <body>
@@ -216,6 +237,8 @@
       <input id="md-file-input" type="file" accept=".md,text/markdown" hidden />
       <a class="muted" href="?md=example.md">example 로드</a>
     </div>
+
+    <div id="source-badge" class="source-badge"></div>
 
     <div class="reveal">
       <div class="slides">
@@ -239,6 +262,7 @@
       const KEY_REPORTS = "report_app_reports_v1";
       const KEY_RUNTIME_MD = "presentation_runtime_md_v1";
       const KEY_SLIDE_FONT_SIZE = "presentation_slide_font_size_v1";
+      const TEMPLATE_VERSION = "20260326c";
       const MIN_FONT_SIZE = 18;
       const MAX_FONT_SIZE = 52;
       const rootSection = document.getElementById("markdown-slide-root");
@@ -250,7 +274,12 @@
       const fontDownBtn = document.getElementById("font-down-btn");
       const fontUpBtn = document.getElementById("font-up-btn");
       const fontSizeText = document.getElementById("font-size-text");
+      const sourceBadge = document.getElementById("source-badge");
       const params = new URLSearchParams(window.location.search);
+
+      function updateSourceBadge(source, mode) {
+        sourceBadge.textContent = `[template ${TEMPLATE_VERSION}] mode=${mode} source=${source}`;
+      }
 
       function clamp(value, min, max) {
         return Math.min(max, Math.max(min, value));
@@ -301,8 +330,8 @@
 
       function normalizeProofNotationInMarkdown(text) {
         return String(text || "")
-          .replaceAll("(필요조건) R가 A에서 연속이면 F(A)=G(A)", "(필요조건) r가 a에서 연속이면 f(a)=g(a)")
-          .replaceAll("(충분조건) F(A)=G(A) 이면 R는 A에서 연속", "(충분조건) f(a)=g(a) 이면 r는 a에서 연속");
+          .replace(/\(필요조건\)\s*R가\s*A에서\s*연속이면\s*F\(A\)\s*=\s*G\(A\)/g, "(필요조건) r가 a에서 연속이면 f(a)=g(a)")
+          .replace(/\(충분조건\)\s*F\(A\)\s*=\s*G\(A\)\s*이면\s*R는\s*A에서\s*연속/g, "(충분조건) f(a)=g(a) 이면 r는 a에서 연속");
       }
 
       function escapeForTextarea(text) {
@@ -316,16 +345,22 @@
 
       async function loadMarkdownText(requestedSource) {
         if (requestedSource === "runtime") {
+          updateSourceBadge("localStorage:runtime", "runtime");
           return localStorage.getItem(KEY_RUNTIME_MD) || "# Empty Slide\n\n내용이 없습니다.";
         }
 
         try {
-          const response = await fetch(requestedSource, { cache: "no-store" });
+          const url = new URL(requestedSource, window.location.href);
+          url.searchParams.set("_t", String(Date.now()));
+          const response = await fetch(url.toString(), { cache: "no-store" });
           if (!response.ok) {
+            updateSourceBadge(`${requestedSource} (HTTP ${response.status})`, "error");
             return `# 로드 실패\n\n파일을 찾을 수 없습니다: ${requestedSource}`;
           }
+          updateSourceBadge(requestedSource, "file");
           return await response.text();
         } catch {
+          updateSourceBadge(`${requestedSource} (network error)`, "error");
           return `# 로드 실패\n\n파일을 불러오지 못했습니다: ${requestedSource}`;
         }
       }
@@ -480,6 +515,7 @@
 
       async function initPresentation() {
         const requestedSource = params.get("md") || "example.md";
+        document.title = `Markdown Presentation Template v${TEMPLATE_VERSION}`;
         const markdownText = await loadMarkdownText(requestedSource);
         setMarkdownSourceFromText(markdownText);
 
