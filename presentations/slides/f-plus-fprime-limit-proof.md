@@ -94,16 +94,16 @@ $$
 
 $$
 |h(x)|
-\le e^{-(x-A_\varepsilon)}|h(A_\varepsilon)| + e^{-x}\int_{A_\varepsilon}^x e^t|r(t)|\,dt
+\le e^{-(x-A_\varepsilon)}|h(A_\varepsilon)| + e^{-x}\int_{A_\varepsilon}^x e^t|r(t)|dt
 $$
 
 $$
 |h(x)|
-\le e^{-(x-A_\varepsilon)}|h(A_\varepsilon)| + \varepsilon\,e^{-x}\int_{A_\varepsilon}^x e^t\,dt
+\le e^{-(x-A_\varepsilon)}|h(A_\varepsilon)| + \varepsilon e^{-x}\int_{A_\varepsilon}^x e^tdt
 $$
 
 $$
-e^{-x}\int_{A_\varepsilon}^x e^t\,dt = 1-e^{-(x-A_\varepsilon)}
+e^{-x}\int_{A_\varepsilon}^x e^tdt = 1-e^{-(x-A_\varepsilon)}
 $$
 
 $$
