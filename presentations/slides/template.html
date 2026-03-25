@@ -29,7 +29,7 @@
 
       .toolbar {
         position: fixed;
-        top: 10px;
+        top: 54px;
         left: 12px;
         right: 12px;
         z-index: 20;
@@ -42,6 +42,37 @@
         border-radius: 12px;
         padding: 10px;
         backdrop-filter: blur(6px);
+        opacity: 0;
+        transform: translateY(-14px);
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+
+      .toolbar.open {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+
+      .toolbar-toggle {
+        position: fixed;
+        top: 10px;
+        right: 12px;
+        z-index: 30;
+        border: 1px solid var(--panel-line);
+        border-radius: 999px;
+        background: #fffffff0;
+        color: var(--ink);
+        padding: 7px 12px;
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        backdrop-filter: blur(6px);
+      }
+
+      .toolbar-toggle:hover {
+        background: #ffffff;
       }
 
       .toolbar a,
@@ -87,6 +118,11 @@
       }
 
       .reveal {
+        margin-top: 8px;
+        transition: margin-top 0.2s ease;
+      }
+
+      body.toolbar-open .reveal {
         margin-top: 66px;
       }
 
@@ -124,20 +160,21 @@
 
       @media (max-width: 760px) {
         .toolbar {
-          position: static;
-          border-radius: 0;
-          border-left: 0;
-          border-right: 0;
+          left: 8px;
+          right: 8px;
+          top: 50px;
         }
 
-        .reveal {
-          margin-top: 8px;
+        body.toolbar-open .reveal {
+          margin-top: 78px;
         }
       }
     </style>
   </head>
   <body>
-    <div class="toolbar">
+    <button id="toolbar-toggle" class="toolbar-toggle" type="button">도구 열기</button>
+
+    <div id="toolbar" class="toolbar" aria-hidden="true">
       <a href="../">← 발표자료 모음으로</a>
       <span class="muted">|</span>
       <select id="report-select"></select>
@@ -169,7 +206,16 @@
       const reportSelect = document.getElementById("report-select");
       const loadReportBtn = document.getElementById("load-report-btn");
       const mdFileInput = document.getElementById("md-file-input");
+      const toolbar = document.getElementById("toolbar");
+      const toolbarToggleBtn = document.getElementById("toolbar-toggle");
       const params = new URLSearchParams(window.location.search);
+
+      function setToolbarOpen(open) {
+        toolbar.classList.toggle("open", open);
+        toolbar.setAttribute("aria-hidden", open ? "false" : "true");
+        document.body.classList.toggle("toolbar-open", open);
+        toolbarToggleBtn.textContent = open ? "도구 닫기" : "도구 열기";
+      }
 
       function readReports() {
         try {
@@ -256,6 +302,12 @@
       }
 
       initReportSelector();
+      setToolbarOpen(false);
+
+      toolbarToggleBtn.addEventListener("click", () => {
+        const next = !toolbar.classList.contains("open");
+        setToolbarOpen(next);
+      });
 
       const deck = new Reveal({
         hash: true,
