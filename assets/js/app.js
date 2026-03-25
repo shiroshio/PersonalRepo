@@ -161,14 +161,16 @@ function ensureMermaidInitialized() {
 
 function renderMarkdownAndMath(source, container) {
   const normalized = normalizeMathDelimiters(source || "");
-  const html = md.render(preprocessWikiLinks(normalized));
+  const extracted = extractMathBlocks(normalized);
+  const html = md.render(preprocessWikiLinks(extracted.markdown));
   const clean = window.DOMPurify.sanitize(html);
   container.innerHTML = clean;
+
+  restoreAndRenderMathBlocks(container, extracted.blocks);
 
   if (window.renderMathInElement) {
     window.renderMathInElement(container, {
       delimiters: [
-        { left: "$$", right: "$$", display: true },
         { left: "\\[", right: "\\]", display: true },
         { left: "\\(", right: "\\)", display: false },
         { left: "$", right: "$", display: false }
@@ -183,6 +185,45 @@ function renderMarkdownAndMath(source, container) {
 
 function normalizeMathDelimiters(source) {
   return source.replace(/\\\[\s*([\s\S]*?)\s*\\\]/g, (_, expr) => `$$${expr.trim()}$$`);
+}
+
+function extractMathBlocks(source) {
+  const blocks = [];
+  const markdown = source.replace(/\$\$([\s\S]*?)\$\$/g, (_, expr) => {
+    const idx = blocks.push(expr.trim()) - 1;
+    return `MATHBLOCKTOKEN_${idx}`;
+  });
+  return { markdown, blocks };
+}
+
+function restoreAndRenderMathBlocks(container, blocks) {
+  if (!blocks || blocks.length === 0) {
+    return;
+  }
+
+  let html = container.innerHTML;
+  blocks.forEach((_, idx) => {
+    html = html.replaceAll(
+      `MATHBLOCKTOKEN_${idx}`,
+      `<span class="math-block" data-math-idx="${idx}"></span>`
+    );
+  });
+  container.innerHTML = html;
+
+  const nodes = Array.from(container.querySelectorAll(".math-block"));
+  nodes.forEach((node) => {
+    const idx = Number(node.dataset.mathIdx);
+    const expr = blocks[idx] || "";
+    if (window.katex) {
+      window.katex.render(expr, node, {
+        displayMode: true,
+        throwOnError: false,
+        strict: "ignore"
+      });
+    } else {
+      node.textContent = `$$${expr}$$`;
+    }
+  });
 }
 
 function preprocessWikiLinks(source) {

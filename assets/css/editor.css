@@ -143,6 +143,12 @@ body.focus-mode .panel-section {
   overflow: auto;
 }
 
+.math-block {
+  display: block;
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
 @media (max-width: 1080px) {
   .editor-layout {
     grid-template-columns: 1fr;
