@@ -16,6 +16,7 @@
         --muted: #6b7280;
         --accent: #0f766e;
         --accent-hover: #0b5f59;
+        --slide-font-size: 38px;
       }
 
       body {
@@ -117,7 +118,21 @@
         color: var(--muted);
       }
 
+      .font-controls {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .font-controls output {
+        min-width: 54px;
+        text-align: center;
+        color: var(--muted);
+        font-weight: 700;
+      }
+
       .reveal {
+        --r-main-font-size: var(--slide-font-size);
         margin-top: 8px;
         transition: margin-top 0.2s ease;
       }
@@ -179,6 +194,11 @@
       <span class="muted">|</span>
       <select id="report-select"></select>
       <button id="load-report-btn" type="button">에디터 리포트 불러오기</button>
+      <div class="font-controls">
+        <button id="font-down-btn" type="button" title="글자 크기 축소">A-</button>
+        <output id="font-size-text">38px</output>
+        <button id="font-up-btn" type="button" title="글자 크기 확대">A+</button>
+      </div>
       <label for="md-file-input" class="cta">md 파일 열기</label>
       <input id="md-file-input" type="file" accept=".md,text/markdown" hidden />
       <a class="muted" href="?md=example.md">example 로드</a>
@@ -202,13 +222,42 @@
     <script>
       const KEY_REPORTS = "report_app_reports_v1";
       const KEY_RUNTIME_MD = "presentation_runtime_md_v1";
+      const KEY_SLIDE_FONT_SIZE = "presentation_slide_font_size_v1";
+      const MIN_FONT_SIZE = 28;
+      const MAX_FONT_SIZE = 52;
       const rootSection = document.getElementById("markdown-slide-root");
       const reportSelect = document.getElementById("report-select");
       const loadReportBtn = document.getElementById("load-report-btn");
       const mdFileInput = document.getElementById("md-file-input");
       const toolbar = document.getElementById("toolbar");
       const toolbarToggleBtn = document.getElementById("toolbar-toggle");
+      const fontDownBtn = document.getElementById("font-down-btn");
+      const fontUpBtn = document.getElementById("font-up-btn");
+      const fontSizeText = document.getElementById("font-size-text");
       const params = new URLSearchParams(window.location.search);
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function getSavedFontSize() {
+        try {
+          const n = Number(localStorage.getItem(KEY_SLIDE_FONT_SIZE));
+          if (Number.isFinite(n)) {
+            return clamp(n, MIN_FONT_SIZE, MAX_FONT_SIZE);
+          }
+        } catch {}
+        return 38;
+      }
+
+      function applyFontSize(size) {
+        const clamped = clamp(size, MIN_FONT_SIZE, MAX_FONT_SIZE);
+        document.documentElement.style.setProperty("--slide-font-size", `${clamped}px`);
+        fontSizeText.value = `${clamped}px`;
+        try {
+          localStorage.setItem(KEY_SLIDE_FONT_SIZE, String(clamped));
+        } catch {}
+      }
 
       function setToolbarOpen(open) {
         toolbar.classList.toggle("open", open);
@@ -285,6 +334,14 @@
         window.location.search = "?md=runtime";
       });
 
+      fontDownBtn.addEventListener("click", () => {
+        applyFontSize(getSavedFontSize() - 2);
+      });
+
+      fontUpBtn.addEventListener("click", () => {
+        applyFontSize(getSavedFontSize() + 2);
+      });
+
       function escapeHtml(value) {
         return String(value)
           .replaceAll("&", "&amp;")
@@ -302,6 +359,7 @@
       }
 
       initReportSelector();
+      applyFontSize(getSavedFontSize());
       setToolbarOpen(false);
 
       toolbarToggleBtn.addEventListener("click", () => {
