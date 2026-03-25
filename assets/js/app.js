@@ -153,8 +153,11 @@ function renderMarkdownAndMath(source, container) {
     window.renderMathInElement(container, {
       delimiters: [
         { left: "$$", right: "$$", display: true },
+        { left: "\\[", right: "\\]", display: true },
+        { left: "\\(", right: "\\)", display: false },
         { left: "$", right: "$", display: false }
       ],
+      strict: "ignore",
       throwOnError: false
     });
   }
@@ -281,6 +284,8 @@ const els = {
   editorFocusBtn: document.getElementById("editor-focus-btn"),
   editorStats: document.getElementById("editor-stats"),
   editorToolbar: document.querySelector(".editor-toolbar"),
+  editorMathTemplate: document.getElementById("editor-math-template"),
+  editorInsertMathTemplateBtn: document.getElementById("editor-insert-math-template-btn"),
   preview: document.getElementById("preview"),
   backupExportBtn: document.getElementById("backup-export-btn"),
   backupImportMode: document.getElementById("backup-import-mode"),
@@ -663,6 +668,24 @@ function bindEditorActions() {
       }
 
       applyInsert(action);
+    });
+  }
+
+  if (els.editorInsertMathTemplateBtn) {
+    els.editorInsertMathTemplateBtn.addEventListener("click", () => {
+      const type = els.editorMathTemplate.value;
+      if (!type) {
+        alert("삽입할 수식 템플릿을 선택하세요.");
+        return;
+      }
+
+      const latex = getMathTemplate(type);
+      if (!latex) {
+        return;
+      }
+
+      insertMathBlock(latex);
+      setStatus("수식 템플릿을 삽입했습니다.");
     });
   }
 
@@ -1178,9 +1201,8 @@ function applyInsert(action) {
     after = "\n```";
     fallback = "코드";
   } else if (action === "math") {
-    before = "$$\n";
-    after = "\n$$";
-    fallback = "x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}";
+    insertMathBlock("x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}");
+    return;
   } else if (action === "table") {
     before = "| 항목 | 값 |\n|---|---|\n| 예시 | 입력 |\n";
     after = "";
@@ -1196,6 +1218,48 @@ function applyInsert(action) {
   const cursor = start + insertText.length;
   textarea.setSelectionRange(cursor, cursor);
   textarea.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function insertMathBlock(latex) {
+  const textarea = els.editorContent;
+  if (!textarea) {
+    return;
+  }
+
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const selected = textarea.value.slice(start, end).trim();
+  const body = selected || latex;
+  const block = `\n$$\n${body}\n$$\n`;
+
+  const next = `${textarea.value.slice(0, start)}${block}${textarea.value.slice(end)}`;
+  textarea.value = next;
+  textarea.focus();
+  const cursor = start + block.length;
+  textarea.setSelectionRange(cursor, cursor);
+  textarea.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function getMathTemplate(type) {
+  if (type === "matrix2x2") {
+    return "A = \\begin{bmatrix} 1 + 2i & 3 - i \\\\ -2i & 4 + i \\end{bmatrix}";
+  }
+  if (type === "matrix3x3") {
+    return "B = \\begin{bmatrix} a_{11} & a_{12} & a_{13} \\\\ a_{21} & a_{22} & a_{23} \\\\ a_{31} & a_{32} & a_{33} \\end{bmatrix}";
+  }
+  if (type === "integral-single") {
+    return "I = \\int_{a}^{b} f(x) \\, dx";
+  }
+  if (type === "integral-double") {
+    return "I = \\iint_{D} f(x, y) \\, dx \\, dy";
+  }
+  if (type === "derivative-single") {
+    return "\\frac{d}{dx} f(x) = \\lim_{h \\to 0} \\frac{f(x+h)-f(x)}{h}";
+  }
+  if (type === "derivative-partial") {
+    return "\\frac{\\partial z}{\\partial x} = \\frac{\\partial}{\\partial x} f(x, y)";
+  }
+  return "";
 }
 
 function getSelectedReport() {

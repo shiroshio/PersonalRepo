@@ -165,6 +165,16 @@
                 <button type="button" class="ghost" data-insert="code">코드블록</button>
                 <button type="button" class="ghost" data-insert="math">수식</button>
                 <button type="button" class="ghost" data-insert="table">표</button>
+                <select id="editor-math-template" style="min-width: 200px;">
+                  <option value="">수식 템플릿 선택...</option>
+                  <option value="matrix2x2">복소수 포함 2x2 행렬</option>
+                  <option value="matrix3x3">3x3 행렬</option>
+                  <option value="integral-single">정적분</option>
+                  <option value="integral-double">이중적분</option>
+                  <option value="derivative-single">1차 미분</option>
+                  <option value="derivative-partial">편미분</option>
+                </select>
+                <button type="button" id="editor-insert-math-template-btn" class="secondary">수식 템플릿 삽입</button>
               </div>
 
               <div class="editor-layout" id="editor-layout">
