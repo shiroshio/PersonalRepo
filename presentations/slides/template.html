@@ -318,7 +318,29 @@
           return loadRuntimeMarkdownAsBlob();
         }
 
-        return requestedSource;
+        try {
+          const response = await fetch(requestedSource, { cache: "no-store" });
+          if (!response.ok) {
+            return requestedSource;
+          }
+          const text = await response.text();
+          return createMarkdownBlobUrl(text);
+        } catch {
+          return requestedSource;
+        }
+      }
+
+      function normalizeProofNotationInSlides() {
+        const targets = Array.from(document.querySelectorAll(".reveal .slides section"));
+        if (targets.length === 0) {
+          return;
+        }
+
+        targets.forEach((section) => {
+          section.innerHTML = section.innerHTML
+            .replaceAll("(필요조건) R가 A에서 연속이면 F(A)=G(A)", "(필요조건) r가 a에서 연속이면 f(a)=g(a)")
+            .replaceAll("(충분조건) F(A)=G(A) 이면 R는 A에서 연속", "(충분조건) f(a)=g(a) 이면 r는 a에서 연속");
+        });
       }
 
       function renderKatexFallback() {
@@ -495,13 +517,16 @@
 
         initializeMermaid();
         await deck.initialize();
+        normalizeProofNotationInSlides();
         renderMermaidBlocks();
         renderKatexFallback();
         deck.on("ready", () => {
+          normalizeProofNotationInSlides();
           renderMermaidBlocks();
           renderKatexFallback();
         });
         deck.on("slidechanged", () => {
+          normalizeProofNotationInSlides();
           renderMermaidBlocks();
           renderKatexFallback();
         });
