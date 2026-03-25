@@ -163,6 +163,13 @@
         color: var(--ink);
       }
 
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        text-transform: none;
+        letter-spacing: normal;
+      }
+
       .reveal pre code {
         max-height: 70vh;
         background: #f3ede0;
@@ -499,7 +506,7 @@
           transition: "slide",
           plugins: [RevealMarkdown, RevealMath.KaTeX],
           markdown: {
-            smartypants: true
+            smartypants: false
           }
         });
 
