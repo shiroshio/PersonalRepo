@@ -3,51 +3,46 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>발표 템플릿</title>
+    <title>Markdown Presentation Template</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css" id="theme" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
     <style>
-      .reveal h1,
-      .reveal h2,
-      .reveal h3 {
-        letter-spacing: -0.02em;
-      }
-
-      .reveal .slides section {
+      .reveal .slides section[data-markdown] {
         text-align: left;
       }
 
-      .reveal .title-slide {
-        text-align: center;
+      .reveal pre code {
+        max-height: 70vh;
       }
     </style>
   </head>
   <body>
     <div class="reveal">
       <div class="slides">
-        <section class="title-slide">
-          <h1>발표 제목</h1>
-          <p>부제목 또는 발표자 이름</p>
-          <small>2026-03-25</small>
-        </section>
-
         <section>
-          <h2>핵심 내용</h2>
-          <ul>
-            <li>포인트 1</li>
-            <li>포인트 2</li>
-            <li>포인트 3</li>
-          </ul>
+          <section
+            data-markdown="example.md"
+            data-separator="^\n---\n$"
+            data-separator-vertical="^\n--\n$"
+            data-separator-notes="^Note:"
+          ></section>
         </section>
       </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/markdown/markdown.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/math/math.js"></script>
     <script>
       const deck = new Reveal({
         hash: true,
         slideNumber: true,
-        transition: "slide"
+        transition: "slide",
+        plugins: [RevealMarkdown, RevealMath.KaTeX],
+        markdown: {
+          smartypants: true
+        }
       });
       deck.initialize();
     </script>
