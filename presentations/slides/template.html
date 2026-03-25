@@ -8,26 +8,154 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css" id="theme" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
     <style>
-      .reveal .slides section[data-markdown] {
+      :root {
+        --page-bg: #f2ecde;
+        --panel-bg: #fffaf0;
+        --panel-line: #d6ccb7;
+        --ink: #1f2937;
+        --muted: #6b7280;
+        --accent: #0f766e;
+        --accent-hover: #0b5f59;
+      }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at 90% -10%, rgb(15 118 110 / 0.12), transparent 30%),
+          radial-gradient(circle at 0% 100%, rgb(194 65 12 / 0.08), transparent 25%),
+          var(--page-bg);
+        color: var(--ink);
+      }
+
+      .toolbar {
+        position: fixed;
+        top: 10px;
+        left: 12px;
+        right: 12px;
+        z-index: 20;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        background: #ffffffe6;
+        border: 1px solid var(--panel-line);
+        border-radius: 12px;
+        padding: 10px;
+        backdrop-filter: blur(6px);
+      }
+
+      .toolbar a,
+      .toolbar button,
+      .toolbar select,
+      .toolbar label {
+        font: inherit;
+        font-size: 0.86rem;
+      }
+
+      .toolbar a {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 700;
+      }
+
+      .toolbar select,
+      .toolbar button,
+      .toolbar label {
+        border: 1px solid var(--panel-line);
+        border-radius: 8px;
+        background: #fff;
+        padding: 7px 10px;
+      }
+
+      .toolbar button,
+      .toolbar label {
+        cursor: pointer;
+      }
+
+      .toolbar .cta {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+      }
+
+      .toolbar .cta:hover {
+        background: var(--accent-hover);
+      }
+
+      .toolbar .muted {
+        color: var(--muted);
+      }
+
+      .reveal {
+        margin-top: 66px;
+      }
+
+      .reveal .slides {
         text-align: left;
+      }
+
+      .reveal .slides section {
+        background: var(--panel-bg);
+        border: 1px solid var(--panel-line);
+        border-radius: 16px;
+        padding: 30px;
+      }
+
+      .reveal h1,
+      .reveal h2,
+      .reveal h3,
+      .reveal p,
+      .reveal li {
+        color: var(--ink);
       }
 
       .reveal pre code {
         max-height: 70vh;
+        background: #f3ede0;
+        border: 1px solid #e2d8c2;
+        border-radius: 8px;
+      }
+
+      .reveal blockquote {
+        border-left: 4px solid #d6ccb7;
+        padding-left: 14px;
+        color: var(--muted);
+      }
+
+      @media (max-width: 760px) {
+        .toolbar {
+          position: static;
+          border-radius: 0;
+          border-left: 0;
+          border-right: 0;
+        }
+
+        .reveal {
+          margin-top: 8px;
+        }
       }
     </style>
   </head>
   <body>
+    <div class="toolbar">
+      <a href="../">← 발표자료 모음으로</a>
+      <span class="muted">|</span>
+      <select id="report-select"></select>
+      <button id="load-report-btn" type="button">에디터 리포트 불러오기</button>
+      <label for="md-file-input" class="cta">md 파일 열기</label>
+      <input id="md-file-input" type="file" accept=".md,text/markdown" hidden />
+      <a class="muted" href="?md=example.md">example 로드</a>
+    </div>
+
     <div class="reveal">
       <div class="slides">
-        <section>
-          <section
-            data-markdown="example.md"
-            data-separator="^\n---\n$"
-            data-separator-vertical="^\n--\n$"
-            data-separator-notes="^Note:"
-          ></section>
-        </section>
+        <section
+          id="markdown-slide-root"
+          data-markdown="example.md"
+          data-separator="^\s*---\s*$"
+          data-separator-vertical="^\s*--\s*$"
+          data-separator-notes="^Note:"
+        ></section>
       </div>
     </div>
 
@@ -35,6 +163,100 @@
     <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/markdown/markdown.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/math/math.js"></script>
     <script>
+      const KEY_REPORTS = "report_app_reports_v1";
+      const KEY_RUNTIME_MD = "presentation_runtime_md_v1";
+      const rootSection = document.getElementById("markdown-slide-root");
+      const reportSelect = document.getElementById("report-select");
+      const loadReportBtn = document.getElementById("load-report-btn");
+      const mdFileInput = document.getElementById("md-file-input");
+      const params = new URLSearchParams(window.location.search);
+
+      function readReports() {
+        try {
+          const raw = localStorage.getItem(KEY_REPORTS);
+          const parsed = raw ? JSON.parse(raw) : [];
+          if (!Array.isArray(parsed)) {
+            return [];
+          }
+          return parsed.filter((item) => item && typeof item.id === "string" && typeof item.title === "string");
+        } catch {
+          return [];
+        }
+      }
+
+      function setMarkdownSource(path) {
+        rootSection.setAttribute("data-markdown", path);
+      }
+
+      function setRuntimeMarkdown(markdownText) {
+        localStorage.setItem(KEY_RUNTIME_MD, markdownText || "");
+      }
+
+      function loadRuntimeMarkdownAsBlob() {
+        const source = localStorage.getItem(KEY_RUNTIME_MD) || "# Empty Slide\n\n내용이 없습니다.";
+        const blob = new Blob([source], { type: "text/markdown;charset=utf-8" });
+        return URL.createObjectURL(blob);
+      }
+
+      function initReportSelector() {
+        const reports = readReports().sort((a, b) =>
+          String(b.updatedAt || "").localeCompare(String(a.updatedAt || ""))
+        );
+
+        if (reports.length === 0) {
+          reportSelect.innerHTML = '<option value="">에디터 리포트 없음</option>';
+          loadReportBtn.disabled = true;
+          return;
+        }
+
+        reportSelect.innerHTML = reports
+          .map((report) => `<option value="${report.id}">${escapeHtml(report.title)}</option>`)
+          .join("");
+
+        loadReportBtn.disabled = false;
+
+        loadReportBtn.addEventListener("click", () => {
+          const targetId = reportSelect.value;
+          const report = reports.find((item) => item.id === targetId);
+          if (!report) {
+            return;
+          }
+
+          setRuntimeMarkdown(report.content || `# ${report.title}`);
+          window.location.search = "?md=runtime";
+        });
+      }
+
+      mdFileInput.addEventListener("change", async (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) {
+          return;
+        }
+
+        const text = await file.text();
+        setRuntimeMarkdown(text);
+        event.target.value = "";
+        window.location.search = "?md=runtime";
+      });
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      const requestedSource = params.get("md") || "example.md";
+      if (requestedSource === "runtime") {
+        setMarkdownSource(loadRuntimeMarkdownAsBlob());
+      } else {
+        setMarkdownSource(requestedSource);
+      }
+
+      initReportSelector();
+
       const deck = new Reveal({
         hash: true,
         slideNumber: true,
