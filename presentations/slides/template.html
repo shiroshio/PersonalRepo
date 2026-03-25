@@ -232,6 +232,8 @@
     <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/markdown/markdown.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/math/math.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
     <script>
       const KEY_REPORTS = "report_app_reports_v1";
@@ -302,27 +304,13 @@
         return URL.createObjectURL(blob);
       }
 
-      function normalizeLatexForSlides(markdownText) {
-        const src = String(markdownText || "");
-
-        // In some Reveal Markdown flows, row separators can lose escaping.
-        // Normalize line-end backslashes inside common multiline LaTeX environments to exactly \\\\.
-        return src.replace(
-          /\\begin\{(bmatrix|pmatrix|vmatrix|Bmatrix|matrix|array|cases|aligned|align|split)\}([\s\S]*?)\\end\{\1\}/g,
-          (full, env, body) => {
-            const fixedBody = body.replace(/\\+\s*(\r?\n)/g, "\\\\\\\\$1");
-            return `\\begin{${env}}${fixedBody}\\end{${env}}`;
-          }
-        );
-      }
-
       function setRuntimeMarkdown(markdownText) {
         localStorage.setItem(KEY_RUNTIME_MD, markdownText || "");
       }
 
       function loadRuntimeMarkdownAsBlob() {
         const source = localStorage.getItem(KEY_RUNTIME_MD) || "# Empty Slide\n\n내용이 없습니다.";
-        return createMarkdownBlobUrl(normalizeLatexForSlides(source));
+        return createMarkdownBlobUrl(source);
       }
 
       async function resolveMarkdownSourceUrl(requestedSource) {
@@ -330,16 +318,26 @@
           return loadRuntimeMarkdownAsBlob();
         }
 
-        try {
-          const response = await fetch(requestedSource, { cache: "no-store" });
-          if (!response.ok) {
-            return requestedSource;
-          }
-          const text = await response.text();
-          return createMarkdownBlobUrl(normalizeLatexForSlides(text));
-        } catch {
-          return requestedSource;
+        return requestedSource;
+      }
+
+      function renderKatexFallback() {
+        if (!window.renderMathInElement) {
+          return;
         }
+
+        document.querySelectorAll(".reveal .slides section").forEach((section) => {
+          window.renderMathInElement(section, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "\\[", right: "\\]", display: true },
+              { left: "$", right: "$", display: false },
+              { left: "\\(", right: "\\)", display: false }
+            ],
+            throwOnError: false,
+            strict: "ignore"
+          });
+        });
       }
 
       function initializeMermaid() {
@@ -498,11 +496,14 @@
         initializeMermaid();
         await deck.initialize();
         renderMermaidBlocks();
+        renderKatexFallback();
         deck.on("ready", () => {
           renderMermaidBlocks();
+          renderKatexFallback();
         });
         deck.on("slidechanged", () => {
           renderMermaidBlocks();
+          renderKatexFallback();
         });
       }
 

@@ -20,7 +20,7 @@ $$
 
 ---
 
-## (필요조건) $r$ 가 $a$ 에서 연속이면 $f(a)=g(a)$
+## (필요조건) r가 a에서 연속이면 f(a)=g(a)
 
 - $\mathbb{Q}$ 와 $\mathbb{Q}^c$ 는 모두 $\mathbb{R}$ 에서 조밀하다.
 - 따라서 $a_n\in\mathbb{Q}$, $b_n\in\mathbb{Q}^c$ 이고
@@ -54,7 +54,7 @@ $$
 
 ---
 
-## (충분조건) $f(a)=g(a)$ 이면 $r$ 는 $a$ 에서 연속
+## (충분조건) f(a)=g(a) 이면 r는 a에서 연속
 
 목표: $x\to a$ 일 때 $r(x)\to r(a)$.
 
@@ -75,7 +75,7 @@ $|x-a|<\delta$ 인 모든 $x$ 에 대해
 - $x\in\mathbb{Q}^c$ 이면 $r(x)=g(x)$ 이므로 $|r(x)-L|<\varepsilon$.
 
 즉 모든 경우에 $|r(x)-L|<\varepsilon$.
-따라서 $r$ 는 $a$ 에서 연속이다.
+따라서 r는 a에서 연속이다.
 
 ---
 
