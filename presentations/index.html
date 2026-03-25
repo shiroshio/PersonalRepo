@@ -5,33 +5,233 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>발표자료 모음</title>
     <style>
+      @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap");
+
+      :root {
+        --bg: #f6f6ef;
+        --ink: #172033;
+        --muted: #5f6a80;
+        --card: #fffef8;
+        --line: #d8d3bf;
+        --accent: #0f766e;
+        --accent-hover: #0b5f59;
+        --shadow: 0 14px 28px rgb(23 32 51 / 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
         margin: 0;
-        min-height: 100vh;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 90% -10%, rgb(15 118 110 / 0.14), transparent 35%),
+          radial-gradient(circle at 0% 100%, rgb(194 65 12 / 0.1), transparent 30%),
+          var(--bg);
+        font-family: "IBM Plex Sans KR", sans-serif;
+      }
+
+      .wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 46px 20px 80px;
+      }
+
+      .header {
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: linear-gradient(140deg, #fffef7, #fff8e7);
+        box-shadow: var(--shadow);
+        padding: 30px;
+      }
+
+      .home-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: #fff;
+        text-decoration: none;
+        color: var(--muted);
+        font-size: 0.88rem;
+        font-weight: 600;
+      }
+
+      .home-link:hover {
+        color: var(--ink);
+      }
+
+      h1 {
+        margin: 14px 0 10px;
+        font-family: "Space Grotesk", sans-serif;
+        font-size: clamp(1.8rem, 3vw, 2.5rem);
+      }
+
+      .lead {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .grid {
+        margin-top: 24px;
         display: grid;
-        place-items: center;
-        background: linear-gradient(135deg, #f0fdfa, #ecfeff 45%, #f8fafc);
-        font-family: "Noto Sans KR", sans-serif;
-        color: #0f172a;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
       }
-      .box {
-        width: min(760px, calc(100% - 32px));
-        background: #ffffffcc;
-        backdrop-filter: blur(4px);
-        border: 1px solid #bae6fd;
+
+      .card {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        border: 1px solid var(--line);
         border-radius: 16px;
-        padding: 28px;
+        background: var(--card);
+        padding: 18px;
+        box-shadow: var(--shadow);
       }
-      h1 { margin-top: 0; }
-      p { color: #334155; line-height: 1.7; }
-      a { color: #0f766e; font-weight: 700; text-decoration: none; }
+
+      .date {
+        display: inline-block;
+        width: fit-content;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 4px 10px;
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+
+      .title {
+        margin: 0;
+        font-size: 1.08rem;
+      }
+
+      .summary {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.65;
+        min-height: 4.9em;
+      }
+
+      .open-btn {
+        margin-top: auto;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        text-decoration: none;
+        font-size: 0.84rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        border-radius: 10px;
+        padding: 10px 12px;
+        border: 1px solid transparent;
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .open-btn:hover {
+        background: var(--accent-hover);
+      }
+
+      .hint {
+        margin-top: 18px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .hint a {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 700;
+      }
+
+      @media (max-width: 980px) {
+        .grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 700px) {
+        .wrap {
+          padding-top: 26px;
+        }
+
+        .header {
+          padding: 22px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .summary {
+          min-height: 0;
+        }
+      }
     </style>
   </head>
   <body>
-    <main class="box">
-      <h1>발표자료 모음</h1>
-      <p>이 폴더에 발표용 HTML/슬라이드 파일을 추가해 통합 포털에서 관리할 수 있습니다.</p>
-      <p><a href="../">통합 포털로 돌아가기</a></p>
+    <main class="wrap">
+      <section class="header">
+        <a class="home-link" href="../">← 홈으로 돌아가기</a>
+        <h1>발표자료 모음</h1>
+        <p class="lead">
+          PPT 파일 다운로드 없이 브라우저에서 바로 발표할 수 있는 HTML 슬라이드 목록입니다.
+          OPEN SLIDE 버튼을 누르면 새 탭에서 슬라이드가 열립니다.
+        </p>
+      </section>
+
+      <section class="grid" id="slides-grid"></section>
+
+      <p class="hint">
+        새 발표는 slides 폴더에 HTML 파일을 추가한 뒤 이 페이지의 데이터 목록에 등록하세요.
+        시작 템플릿: <a href="./slides/template.html" target="_blank" rel="noopener noreferrer">template.html</a>
+      </p>
     </main>
+
+    <script>
+      const slideItems = [
+        {
+          title: "위상수학 기초 세미나",
+          date: "2026-03-20",
+          summary: "위상수학의 핵심 개념인 열린집합, 연속함수, 위상동형의 직관과 예시를 다룹니다.",
+          href: "./slides/topology-seminar.html"
+        },
+        {
+          title: "연구실 주간 미팅 - 실험 업데이트",
+          date: "2026-03-22",
+          summary: "최근 실험 결과, 이슈, 다음 주 액션 아이템을 정리한 미팅 발표 자료입니다.",
+          href: "./slides/lab-weekly-update.html"
+        },
+        {
+          title: "발표 템플릿 샘플",
+          date: "Template",
+          summary: "Reveal.js 기반 기본 골격. 제목 슬라이드 1장 + 내용 슬라이드 1장으로 구성됩니다.",
+          href: "./slides/template.html"
+        }
+      ];
+
+      const grid = document.getElementById("slides-grid");
+
+      function renderCards() {
+        grid.innerHTML = slideItems
+          .map(
+            (item) => `
+              <article class="card">
+                <span class="date">${item.date}</span>
+                <h2 class="title">${item.title}</h2>
+                <p class="summary">${item.summary}</p>
+                <a class="open-btn" href="${item.href}" target="_blank" rel="noopener noreferrer">OPEN SLIDE</a>
+              </article>
+            `
+          )
+          .join("");
+      }
+
+      renderCards();
+    </script>
   </body>
 </html>
