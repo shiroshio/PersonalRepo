@@ -304,19 +304,12 @@
         localStorage.setItem(KEY_RUNTIME_MD, markdownText || "");
       }
 
-      function normalizeProofNotationInMarkdown(text) {
-        return String(text || "")
-          .replace(/\(필요조건\)\s*R가\s*A에서\s*연속이면\s*F\(A\)\s*=\s*G\(A\)/g, "(필요조건) r가 a에서 연속이면 f(a)=g(a)")
-          .replace(/\(충분조건\)\s*F\(A\)\s*=\s*G\(A\)\s*이면\s*R는\s*A에서\s*연속/g, "(충분조건) f(a)=g(a) 이면 r는 a에서 연속");
-      }
-
       function escapeForTextarea(text) {
         return String(text || "").replaceAll("</textarea>", "<\\/textarea>");
       }
 
       function setMarkdownSourceFromText(markdownText) {
-        const normalized = normalizeProofNotationInMarkdown(markdownText);
-        rootSection.innerHTML = `<textarea data-template>${escapeForTextarea(normalized)}</textarea>`;
+        rootSection.innerHTML = `<textarea data-template>${escapeForTextarea(markdownText)}</textarea>`;
       }
 
       async function loadMarkdownText(requestedSource) {
@@ -335,29 +328,6 @@
         } catch {
           return `# 로드 실패\n\n파일을 불러오지 못했습니다: ${requestedSource}`;
         }
-      }
-
-      function forceLowercaseProofTextInDom() {
-        const replacements = [
-          ["(필요조건) R가 A에서 연속이면 F(A)=G(A)", "(필요조건) r가 a에서 연속이면 f(a)=g(a)"],
-          ["(충분조건) F(A)=G(A) 이면 R는 A에서 연속", "(충분조건) f(a)=g(a) 이면 r는 a에서 연속"],
-          ["R가 A에서 연속이면 F(A)=G(A)", "r가 a에서 연속이면 f(a)=g(a)"],
-          ["F(A)=G(A) 이면 R는 A에서 연속", "f(a)=g(a) 이면 r는 a에서 연속"]
-        ];
-
-        const walker = document.createTreeWalker(document.querySelector(".reveal .slides"), NodeFilter.SHOW_TEXT);
-        const textNodes = [];
-        while (walker.nextNode()) {
-          textNodes.push(walker.currentNode);
-        }
-
-        textNodes.forEach((node) => {
-          let text = node.nodeValue;
-          replacements.forEach(([before, after]) => {
-            text = text.replaceAll(before, after);
-          });
-          node.nodeValue = text;
-        });
       }
 
       function renderKatexFallback() {
@@ -535,16 +505,13 @@
 
         initializeMermaid();
         await deck.initialize();
-        forceLowercaseProofTextInDom();
         renderMermaidBlocks();
         renderKatexFallback();
         deck.on("ready", () => {
-          forceLowercaseProofTextInDom();
           renderMermaidBlocks();
           renderKatexFallback();
         });
         deck.on("slidechanged", () => {
-          forceLowercaseProofTextInDom();
           renderMermaidBlocks();
           renderKatexFallback();
         });
