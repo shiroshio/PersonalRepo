@@ -720,7 +720,7 @@ function renderEditor() {
     els.editorContent.value = "";
     els.editorUpdated.textContent = "선택된 리포트 없음";
     if (els.editorStats) {
-      els.editorStats.textContent = "0자 · 0단어 · 0분";
+      els.editorStats.textContent = "0자";
     }
     els.preview.innerHTML = "<p class='muted'>리포트를 선택하거나 새로 생성해 주세요.</p>";
     return;
@@ -749,9 +749,7 @@ function renderEditorStats(content) {
   }
   const text = (content || "").trim();
   const charCount = text.length;
-  const wordCount = text ? text.split(/\s+/).length : 0;
-  const readMinutes = Math.max(1, Math.ceil(wordCount / 220));
-  els.editorStats.textContent = `${charCount}자 · ${wordCount}단어 · ${readMinutes}분`;
+  els.editorStats.textContent = `${charCount}자`;
 }
 
 function applyInsert(action) {
