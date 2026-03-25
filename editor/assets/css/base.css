@@ -97,6 +97,24 @@ button.ghost {
 }
 button.ghost:hover { background: var(--surface-hover); }
 
+.btn-ghost-link {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 14px;
+  background: transparent;
+  color: var(--text-main);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.btn-ghost-link:hover {
+  background: var(--surface-hover);
+}
+
 input, select, textarea {
   border: 1px solid var(--border);
   border-radius: 6px;

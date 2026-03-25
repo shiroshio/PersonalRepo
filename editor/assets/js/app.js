@@ -1,6 +1,7 @@
 const KEY_CATEGORIES = "report_app_categories_v1";
 const KEY_REPORTS = "report_app_reports_v1";
 const KEY_SETTINGS = "report_app_settings_v1";
+const KEY_GLOBAL_THEME = "integrated_theme_v1";
 const UNCATEGORIZED_ID = "cat-uncategorized";
 
 function loadData() {
@@ -51,6 +52,23 @@ function parse(key, fallback) {
     return JSON.parse(raw);
   } catch {
     return fallback;
+  }
+}
+
+function loadGlobalTheme() {
+  try {
+    const raw = localStorage.getItem(KEY_GLOBAL_THEME);
+    return raw === "dark" || raw === "light" ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveGlobalTheme(theme) {
+  try {
+    localStorage.setItem(KEY_GLOBAL_THEME, theme);
+  } catch {
+    // ignore storage sync failures
   }
 }
 
@@ -452,8 +470,9 @@ const els = {
 init();
 
 function init() {
-  const preferredTheme = data.settings.theme || "light";
+  const preferredTheme = loadGlobalTheme() || data.settings.theme || "light";
   applyTheme(preferredTheme);
+  data.settings.theme = preferredTheme;
 
   isPreviewOpen = data.settings.previewOpen !== false;
   const savedReportId = data.settings.lastReportId;
@@ -496,6 +515,7 @@ function bindThemeActions() {
     const nextTheme = getCurrentTheme() === "dark" ? "light" : "dark";
     applyTheme(nextTheme);
     data.settings.theme = nextTheme;
+    saveGlobalTheme(nextTheme);
     saveData(data);
     const current = getSelectedReport();
     if (current) {

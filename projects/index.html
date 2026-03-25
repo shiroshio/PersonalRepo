@@ -4,33 +4,125 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>기타 웹사이트</title>
+    <script>
+      (function () {
+        try {
+          var savedTheme = localStorage.getItem("integrated_theme_v1");
+          if (savedTheme === "dark" || savedTheme === "light") {
+            document.documentElement.setAttribute("data-theme", savedTheme);
+          }
+        } catch {}
+      })();
+    </script>
     <style>
+      :root {
+        --bg-start: #fff7ed;
+        --bg-mid: #fffbeb;
+        --bg-end: #f8fafc;
+        --ink: #1f2937;
+        --muted: #475569;
+        --panel: #fffffff0;
+        --line: #fed7aa;
+        --accent: #c2410c;
+      }
+
+      [data-theme="dark"] {
+        --bg-start: #0b1220;
+        --bg-mid: #111827;
+        --bg-end: #0f172a;
+        --ink: #e5e7eb;
+        --muted: #94a3b8;
+        --panel: #111827f0;
+        --line: #334155;
+        --accent: #fb923c;
+      }
+
       body {
         margin: 0;
         min-height: 100vh;
         display: grid;
         place-items: center;
-        background: linear-gradient(140deg, #fff7ed, #fffbeb 45%, #f8fafc);
+        background: linear-gradient(140deg, var(--bg-start), var(--bg-mid) 45%, var(--bg-end));
         font-family: "Noto Sans KR", sans-serif;
-        color: #1f2937;
+        color: var(--ink);
       }
       .box {
         width: min(760px, calc(100% - 32px));
-        background: #fffffff0;
-        border: 1px solid #fed7aa;
+        background: var(--panel);
+        border: 1px solid var(--line);
         border-radius: 16px;
         padding: 28px;
       }
-      h1 { margin-top: 0; }
-      p { color: #475569; line-height: 1.7; }
-      a { color: #c2410c; font-weight: 700; text-decoration: none; }
+
+      .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      h1 { margin-top: 14px; }
+      p { color: var(--muted); line-height: 1.7; }
+
+      .home-link {
+        color: var(--accent);
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .theme-toggle {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 8px 14px;
+        background: transparent;
+        color: var(--ink);
+        font: inherit;
+        font-size: 0.88rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      @media (max-width: 640px) {
+        .top { flex-direction: column; align-items: flex-start; }
+      }
     </style>
   </head>
   <body>
     <main class="box">
+      <div class="top">
+        <a class="home-link" href="../">← 홈으로 돌아가기</a>
+        <button id="global-theme-toggle" class="theme-toggle" type="button">다크 모드</button>
+      </div>
       <h1>기타 웹사이트</h1>
       <p>실험용 웹 앱, 도구, 데모 등 추가 사이트를 이 경로에 구성하면 됩니다.</p>
-      <p><a href="../">통합 포털로 돌아가기</a></p>
     </main>
+    <script>
+      const themeKey = "integrated_theme_v1";
+      const themeToggleBtn = document.getElementById("global-theme-toggle");
+
+      function currentTheme() {
+        return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+      }
+
+      function applyTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+        themeToggleBtn.textContent = theme === "dark" ? "라이트 모드" : "다크 모드";
+      }
+
+      try {
+        const saved = localStorage.getItem(themeKey);
+        applyTheme(saved === "dark" ? "dark" : "light");
+      } catch {
+        applyTheme("light");
+      }
+
+      themeToggleBtn.addEventListener("click", () => {
+        const next = currentTheme() === "dark" ? "light" : "dark";
+        applyTheme(next);
+        try {
+          localStorage.setItem(themeKey, next);
+        } catch {}
+      });
+    </script>
   </body>
 </html>

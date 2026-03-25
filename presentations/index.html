@@ -4,6 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>발표자료 모음</title>
+    <script>
+      (function () {
+        try {
+          var savedTheme = localStorage.getItem("integrated_theme_v1");
+          if (savedTheme === "dark" || savedTheme === "light") {
+            document.documentElement.setAttribute("data-theme", savedTheme);
+          }
+        } catch {}
+      })();
+    </script>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap");
 
@@ -16,6 +26,17 @@
         --accent: #0f766e;
         --accent-hover: #0b5f59;
         --shadow: 0 14px 28px rgb(23 32 51 / 0.08);
+      }
+
+      [data-theme="dark"] {
+        --bg: #0b1220;
+        --ink: #e5e7eb;
+        --muted: #94a3b8;
+        --card: #111827;
+        --line: #334155;
+        --accent: #2dd4bf;
+        --accent-hover: #14b8a6;
+        --shadow: 0 14px 28px rgb(0 0 0 / 0.35);
       }
 
       * {
@@ -46,6 +67,17 @@
         padding: 30px;
       }
 
+      [data-theme="dark"] .header {
+        background: linear-gradient(140deg, #0f172a, #111827);
+      }
+
+      .header-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
       .home-link {
         display: inline-flex;
         align-items: center;
@@ -58,6 +90,22 @@
         color: var(--muted);
         font-size: 0.88rem;
         font-weight: 600;
+      }
+
+      [data-theme="dark"] .home-link {
+        background: #1f2937;
+      }
+
+      .theme-toggle {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 8px 14px;
+        background: var(--card);
+        color: var(--ink);
+        font: inherit;
+        font-size: 0.88rem;
+        font-weight: 700;
+        cursor: pointer;
       }
 
       .home-link:hover {
@@ -163,6 +211,11 @@
           padding: 22px;
         }
 
+        .header-top {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
         .grid {
           grid-template-columns: 1fr;
         }
@@ -176,7 +229,10 @@
   <body>
     <main class="wrap">
       <section class="header">
-        <a class="home-link" href="../">← 홈으로 돌아가기</a>
+        <div class="header-top">
+          <a class="home-link" href="../">← 홈으로 돌아가기</a>
+          <button id="global-theme-toggle" class="theme-toggle" type="button">다크 모드</button>
+        </div>
         <h1>발표자료 모음</h1>
         <p class="lead">
           PPT 파일 다운로드 없이 브라우저에서 바로 발표할 수 있는 HTML 슬라이드 목록입니다.
@@ -215,6 +271,17 @@
       ];
 
       const grid = document.getElementById("slides-grid");
+      const themeKey = "integrated_theme_v1";
+      const themeToggleBtn = document.getElementById("global-theme-toggle");
+
+      function currentTheme() {
+        return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+      }
+
+      function applyTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+        themeToggleBtn.textContent = theme === "dark" ? "라이트 모드" : "다크 모드";
+      }
 
       function renderCards() {
         grid.innerHTML = slideItems
@@ -230,6 +297,21 @@
           )
           .join("");
       }
+
+      try {
+        const saved = localStorage.getItem(themeKey);
+        applyTheme(saved === "dark" ? "dark" : "light");
+      } catch {
+        applyTheme("light");
+      }
+
+      themeToggleBtn.addEventListener("click", () => {
+        const next = currentTheme() === "dark" ? "light" : "dark";
+        applyTheme(next);
+        try {
+          localStorage.setItem(themeKey, next);
+        } catch {}
+      });
 
       renderCards();
     </script>

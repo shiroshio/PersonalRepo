@@ -4,6 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>개인 통합 웹사이트</title>
+    <script>
+      (function () {
+        try {
+          var savedTheme = localStorage.getItem("integrated_theme_v1");
+          if (savedTheme === "dark" || savedTheme === "light") {
+            document.documentElement.setAttribute("data-theme", savedTheme);
+          }
+        } catch {}
+      })();
+    </script>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap");
 
@@ -16,6 +26,17 @@
         --accent: #c2410c;
         --accent-2: #0f766e;
         --shadow: 0 14px 28px rgb(23 32 51 / 0.08);
+      }
+
+      [data-theme="dark"] {
+        --bg: #0b1220;
+        --ink: #e5e7eb;
+        --muted: #94a3b8;
+        --card: #111827;
+        --line: #334155;
+        --accent: #fb923c;
+        --accent-2: #2dd4bf;
+        --shadow: 0 14px 28px rgb(0 0 0 / 0.35);
       }
 
       * { box-sizing: border-box; }
@@ -44,6 +65,17 @@
         box-shadow: var(--shadow);
       }
 
+      [data-theme="dark"] .hero {
+        background: linear-gradient(140deg, #0f172a, #111827);
+      }
+
+      .hero-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
       .eyebrow {
         display: inline-block;
         padding: 6px 12px;
@@ -52,6 +84,22 @@
         border: 1px solid var(--line);
         color: var(--muted);
         font-size: 0.82rem;
+      }
+
+      [data-theme="dark"] .eyebrow {
+        background: #1f2937;
+      }
+
+      .theme-toggle {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 8px 14px;
+        background: var(--card);
+        color: var(--ink);
+        font: inherit;
+        font-size: 0.88rem;
+        font-weight: 700;
+        cursor: pointer;
       }
 
       h1 {
@@ -120,13 +168,17 @@
       @media (max-width: 900px) {
         .grid { grid-template-columns: 1fr; }
         .wrap { padding-top: 32px; }
+        .hero-top { align-items: flex-start; flex-direction: column; }
       }
     </style>
   </head>
   <body>
     <div class="wrap">
       <section class="hero">
-        <span class="eyebrow">Integrated Workspace</span>
+        <div class="hero-top">
+          <span class="eyebrow">Integrated Workspace</span>
+          <button id="global-theme-toggle" class="theme-toggle" type="button">다크 모드</button>
+        </div>
         <h1>개인 통합 웹사이트</h1>
         <p class="lead">
           발표 자료, 연구 에디터, 실험용 프로젝트를 하나의 포털에서 관리합니다.
@@ -158,5 +210,33 @@
         GitHub Pages 기준 URL: https://shiroshio.github.io/PersonalRepo/
       </footer>
     </div>
+    <script>
+      const themeKey = "integrated_theme_v1";
+      const themeToggleBtn = document.getElementById("global-theme-toggle");
+
+      function currentTheme() {
+        return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+      }
+
+      function applyTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+        themeToggleBtn.textContent = theme === "dark" ? "라이트 모드" : "다크 모드";
+      }
+
+      try {
+        const saved = localStorage.getItem(themeKey);
+        applyTheme(saved === "dark" ? "dark" : "light");
+      } catch {
+        applyTheme("light");
+      }
+
+      themeToggleBtn.addEventListener("click", () => {
+        const next = currentTheme() === "dark" ? "light" : "dark";
+        applyTheme(next);
+        try {
+          localStorage.setItem(themeKey, next);
+        } catch {}
+      });
+    </script>
   </body>
 </html>
