@@ -1,6 +1,216 @@
-import { loadData, saveData, exportJson, importJson } from "./storage.js";
-import { normalizeData, makeCategory, makeReport, getUncategorizedId } from "./state.js";
-import { renderMarkdownAndMath, reportToMarkdown, markdownToDraft } from "./markdown.js";
+const KEY_CATEGORIES = "report_app_categories_v1";
+const KEY_REPORTS = "report_app_reports_v1";
+const KEY_SETTINGS = "report_app_settings_v1";
+const UNCATEGORIZED_ID = "cat-uncategorized";
+
+function loadData() {
+  return {
+    categories: parse(KEY_CATEGORIES, []),
+    reports: parse(KEY_REPORTS, []),
+    settings: parse(KEY_SETTINGS, { schemaVersion: 1 })
+  };
+}
+
+function saveData(data) {
+  localStorage.setItem(KEY_CATEGORIES, JSON.stringify(data.categories));
+  localStorage.setItem(KEY_REPORTS, JSON.stringify(data.reports));
+  localStorage.setItem(KEY_SETTINGS, JSON.stringify(data.settings));
+}
+
+function exportJson(data) {
+  const payload = {
+    schemaVersion: 1,
+    exportedAt: new Date().toISOString(),
+    categories: data.categories,
+    reports: data.reports
+  };
+  return JSON.stringify(payload, null, 2);
+}
+
+function importJson(rawText) {
+  const parsed = JSON.parse(rawText);
+  if (!parsed || typeof parsed !== "object") {
+    throw new Error("잘못된 JSON 형식입니다.");
+  }
+  if (!Array.isArray(parsed.categories) || !Array.isArray(parsed.reports)) {
+    throw new Error("categories/reports 배열이 필요합니다.");
+  }
+  return {
+    categories: parsed.categories,
+    reports: parsed.reports,
+    settings: { schemaVersion: Number(parsed.schemaVersion || 1) }
+  };
+}
+
+function parse(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) {
+      return fallback;
+    }
+    return JSON.parse(raw);
+  } catch {
+    return fallback;
+  }
+}
+
+function normalizeData(rawData) {
+  const now = new Date().toISOString();
+  const safe = {
+    categories: Array.isArray(rawData.categories) ? rawData.categories : [],
+    reports: Array.isArray(rawData.reports) ? rawData.reports : [],
+    settings: rawData.settings || { schemaVersion: 1 }
+  };
+
+  let categories = safe.categories
+    .filter((item) => item && typeof item.id === "string" && typeof item.name === "string")
+    .map((item) => ({
+      id: item.id,
+      name: item.name.trim() || "이름없음",
+      createdAt: item.createdAt || now
+    }));
+
+  if (!categories.some((c) => c.id === UNCATEGORIZED_ID)) {
+    categories = [
+      {
+        id: UNCATEGORIZED_ID,
+        name: "미분류",
+        createdAt: now
+      },
+      ...categories
+    ];
+  }
+
+  const categoryIds = new Set(categories.map((c) => c.id));
+
+  const reports = safe.reports
+    .filter((item) => item && typeof item.id === "string")
+    .map((item) => {
+      const createdAt = item.createdAt || now;
+      const updatedAt = item.updatedAt || createdAt;
+      const categoryId = categoryIds.has(item.categoryId) ? item.categoryId : UNCATEGORIZED_ID;
+      const tags = Array.isArray(item.tags) ? item.tags.filter(Boolean) : [];
+
+      return {
+        id: item.id,
+        title: (item.title || "제목 없음").trim(),
+        categoryId,
+        content: item.content || "",
+        tags,
+        createdAt,
+        updatedAt
+      };
+    });
+
+  return {
+    categories,
+    reports,
+    settings: { schemaVersion: Number(safe.settings.schemaVersion || 1) }
+  };
+}
+
+function makeCategory(name) {
+  return {
+    id: `cat-${crypto.randomUUID()}`,
+    name: name.trim(),
+    createdAt: new Date().toISOString()
+  };
+}
+
+function makeReport() {
+  const now = new Date().toISOString();
+  return {
+    id: `rep-${crypto.randomUUID()}`,
+    title: "새 리포트",
+    categoryId: UNCATEGORIZED_ID,
+    content: "",
+    tags: [],
+    createdAt: now,
+    updatedAt: now
+  };
+}
+
+function getUncategorizedId() {
+  return UNCATEGORIZED_ID;
+}
+
+const md = window.markdownit({
+  html: false,
+  linkify: true,
+  breaks: true
+});
+
+function renderMarkdownAndMath(source, container) {
+  const html = md.render(source || "");
+  const clean = window.DOMPurify.sanitize(html);
+  container.innerHTML = clean;
+
+  if (window.renderMathInElement) {
+    window.renderMathInElement(container, {
+      delimiters: [
+        { left: "$$", right: "$$", display: true },
+        { left: "$", right: "$", display: false }
+      ],
+      throwOnError: false
+    });
+  }
+}
+
+function reportToMarkdown(report, categoryName) {
+  const tagLine = report.tags.join(", ");
+  return [
+    "---",
+    `title: ${report.title}`,
+    `category: ${categoryName}`,
+    `tags: ${tagLine}`,
+    `updatedAt: ${report.updatedAt}`,
+    "---",
+    "",
+    report.content
+  ].join("\n");
+}
+
+function markdownToDraft(text) {
+  const lines = text.split(/\r?\n/);
+  if (lines[0] !== "---") {
+    return {
+      title: guessTitle(text),
+      tags: [],
+      categoryName: "미분류",
+      content: text
+    };
+  }
+
+  let i = 1;
+  const meta = {};
+  while (i < lines.length && lines[i] !== "---") {
+    const line = lines[i];
+    const idx = line.indexOf(":");
+    if (idx > -1) {
+      const key = line.slice(0, idx).trim();
+      const value = line.slice(idx + 1).trim();
+      meta[key] = value;
+    }
+    i += 1;
+  }
+
+  const content = lines.slice(i + 1).join("\n");
+
+  return {
+    title: meta.title || guessTitle(content),
+    categoryName: meta.category || "미분류",
+    tags: (meta.tags || "")
+      .split(",")
+      .map((v) => v.trim())
+      .filter(Boolean),
+    content
+  };
+}
+
+function guessTitle(content) {
+  const first = (content || "").split(/\r?\n/).find((line) => line.trim().length > 0);
+  return first ? first.replace(/^#+\s*/, "").slice(0, 40) : "가져온 리포트";
+}
 
 let data = normalizeData(loadData());
 let currentView = "dashboard";
