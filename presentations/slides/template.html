@@ -221,7 +221,7 @@
       <div class="slides">
         <section
           id="markdown-slide-root"
-          data-markdown="example.md"
+          data-markdown
           data-separator="^\s*---\s*$"
           data-separator-vertical="^\s*--\s*$"
           data-separator-notes="^Note:"
@@ -295,52 +295,39 @@
         }
       }
 
-      function setMarkdownSource(path) {
-        rootSection.setAttribute("data-markdown", path);
-      }
-
-      function createMarkdownBlobUrl(markdownText) {
-        const blob = new Blob([markdownText], { type: "text/markdown;charset=utf-8" });
-        return URL.createObjectURL(blob);
-      }
-
       function setRuntimeMarkdown(markdownText) {
         localStorage.setItem(KEY_RUNTIME_MD, markdownText || "");
       }
 
-      function loadRuntimeMarkdownAsBlob() {
-        const source = localStorage.getItem(KEY_RUNTIME_MD) || "# Empty Slide\n\n내용이 없습니다.";
-        return createMarkdownBlobUrl(source);
+      function normalizeProofNotationInMarkdown(text) {
+        return String(text || "")
+          .replaceAll("(필요조건) R가 A에서 연속이면 F(A)=G(A)", "(필요조건) r가 a에서 연속이면 f(a)=g(a)")
+          .replaceAll("(충분조건) F(A)=G(A) 이면 R는 A에서 연속", "(충분조건) f(a)=g(a) 이면 r는 a에서 연속");
       }
 
-      async function resolveMarkdownSourceUrl(requestedSource) {
+      function escapeForTextarea(text) {
+        return String(text || "").replaceAll("</textarea>", "<\\/textarea>");
+      }
+
+      function setMarkdownSourceFromText(markdownText) {
+        const normalized = normalizeProofNotationInMarkdown(markdownText);
+        rootSection.innerHTML = `<textarea data-template>${escapeForTextarea(normalized)}</textarea>`;
+      }
+
+      async function loadMarkdownText(requestedSource) {
         if (requestedSource === "runtime") {
-          return loadRuntimeMarkdownAsBlob();
+          return localStorage.getItem(KEY_RUNTIME_MD) || "# Empty Slide\n\n내용이 없습니다.";
         }
 
         try {
           const response = await fetch(requestedSource, { cache: "no-store" });
           if (!response.ok) {
-            return requestedSource;
+            return `# 로드 실패\n\n파일을 찾을 수 없습니다: ${requestedSource}`;
           }
-          const text = await response.text();
-          return createMarkdownBlobUrl(text);
+          return await response.text();
         } catch {
-          return requestedSource;
+          return `# 로드 실패\n\n파일을 불러오지 못했습니다: ${requestedSource}`;
         }
-      }
-
-      function normalizeProofNotationInSlides() {
-        const targets = Array.from(document.querySelectorAll(".reveal .slides section"));
-        if (targets.length === 0) {
-          return;
-        }
-
-        targets.forEach((section) => {
-          section.innerHTML = section.innerHTML
-            .replaceAll("(필요조건) R가 A에서 연속이면 F(A)=G(A)", "(필요조건) r가 a에서 연속이면 f(a)=g(a)")
-            .replaceAll("(충분조건) F(A)=G(A) 이면 R는 A에서 연속", "(충분조건) f(a)=g(a) 이면 r는 a에서 연속");
-        });
       }
 
       function renderKatexFallback() {
@@ -493,8 +480,8 @@
 
       async function initPresentation() {
         const requestedSource = params.get("md") || "example.md";
-        const resolvedSource = await resolveMarkdownSourceUrl(requestedSource);
-        setMarkdownSource(resolvedSource);
+        const markdownText = await loadMarkdownText(requestedSource);
+        setMarkdownSourceFromText(markdownText);
 
         initReportSelector();
         applyFontSize(getSavedFontSize());
@@ -517,16 +504,13 @@
 
         initializeMermaid();
         await deck.initialize();
-        normalizeProofNotationInSlides();
         renderMermaidBlocks();
         renderKatexFallback();
         deck.on("ready", () => {
-          normalizeProofNotationInSlides();
           renderMermaidBlocks();
           renderKatexFallback();
         });
         deck.on("slidechanged", () => {
-          normalizeProofNotationInSlides();
           renderMermaidBlocks();
           renderKatexFallback();
         });
