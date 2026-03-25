@@ -78,7 +78,7 @@ $$
 
 ---
 
-## 3단계: $h(x)\to0$ (\(\varepsilon\)-논법)
+## 3단계: $h(x)\to0$ ($\varepsilon$-논법)
 
 $\varepsilon>0$ 을 임의로 잡자.
 
