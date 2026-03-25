@@ -1459,13 +1459,13 @@ function insertMathBlock(latex, position = "cursor") {
   const end = textarea.selectionEnd;
   const selected = textarea.value.slice(start, end).trim();
   const body = position === "replace" && selected ? selected : latex;
-  const block = `$$${body}$$`;
+  const block = `\n$$\n${body}\n$$\n`;
 
   let next = textarea.value;
   let cursor = 0;
 
   if (position === "start") {
-    next = `${block}\n\n${textarea.value}`;
+    next = `${block}${textarea.value}`;
     cursor = block.length;
   } else if (position === "end") {
     next = `${textarea.value}${textarea.value.endsWith("\n") ? "" : "\n"}${block}`;
@@ -1497,10 +1497,17 @@ function ensureEditableReport() {
 
 function getMathTemplate(type) {
   if (type === "matrix2x2") {
-    return "A = \\begin{bmatrix} 1 + 2i & 3 - i \\\\ -2i & 4 + i \\end{bmatrix}";
+    return String.raw`A = \begin{bmatrix}
+1 + 2i & 3 - i \\
+-2i & 4 + i
+\end{bmatrix}`;
   }
   if (type === "matrix3x3") {
-    return "B = \\begin{bmatrix} a_{11} & a_{12} & a_{13} \\\\ a_{21} & a_{22} & a_{23} \\\\ a_{31} & a_{32} & a_{33} \\end{bmatrix}";
+    return String.raw`B = \begin{bmatrix}
+a_{11} & a_{12} & a_{13} \\
+a_{21} & a_{22} & a_{23} \\
+a_{31} & a_{32} & a_{33}
+\end{bmatrix}`;
   }
   if (type === "integral-single") {
     return "I = \\int_{a}^{b} f(x) \\, dx";
