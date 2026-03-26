@@ -1,112 +1,101 @@
-# 가중치 평균값 정리 형태의 등식
+# A Weighted Mean-Value Identity
 
-문제 설정과 결론을 발표용으로 정리한다.
-
----
-
-## 문제
-
-함수 $f:[0,1]\to\mathbb{R}$ 가 다음을 만족한다.
-
-1. $f$는 $[0,1]$에서 연속
-2. $f$는 $(0,1)$에서 미분 가능
-3. $f'(x)>0$ for all $x\in(0,1)$
-4. $f(0)=0,\ f(1)=1$
-
-또, 양수 $w_1,\dots,w_n$ 에 대해
-
-$$
-\sum_{i=1}^n w_i=1
-$$
-
-를 가정한다. (엄격 증가 조건은 뒤에서 코멘트)
-
-보일 것:
-
-$$
-\exists c_1,\dots,c_n\in(0,1)\ \text{s.t.}\ \sum_{i=1}^n \frac{w_i}{f'(c_i)}=1.
-$$
+This is a clean MVT-based proof you can present step by step.
 
 ---
 
-## 결론
+## Statement
 
-주장은 참이다.
+Let $f:[0,1]\to\mathbb{R}$ satisfy:
 
-핵심 아이디어:
+1. $f$ is continuous on $[0,1]$.
+2. $f$ is differentiable on $(0,1)$.
+3. $f'(x)>0$ for every $x\in(0,1)$.
+4. $f(0)=0$ and $f(1)=1$.
 
-- 가중치 누적합 $y_i$ 를 만든다.
-- $f(x_i)=y_i$ 를 만족하는 점 $x_i$ 를 잡는다.
-- 각 구간 $[x_{i-1},x_i]$ 에 평균값정리(MVT)를 적용한다.
-- 마지막에 망원합으로 1이 나온다.
-
----
-
-## 1단계: 누적합 정의
+Let $w_1,\dots,w_n>0$ with
 
 $$
-y_0:=0,\qquad y_i:=\sum_{k=1}^i w_k\quad(i=1,\dots,n).
+\sum_{i=1}^n w_i=1.
 $$
 
-$w_i>0$ 이므로
+Show that there exist $c_1,\dots,c_n\in(0,1)$ such that
 
 $$
-0=y_0<y_1<\cdots<y_n=\sum_{k=1}^n w_k=1.
+\sum_{i=1}^n \frac{w_i}{f'(c_i)}=1.
 $$
 
 ---
 
-## 2단계: $f(x_i)=y_i$ 인 $x_i$의 존재
+## Quick Answer to the Weight Question
 
-각 $y_i\in[0,1]$ 에 대해,
+The weights do **not** need to be pairwise distinct.
 
-- $f$가 $[0,1]$에서 연속이고
-- $f(0)=0,\ f(1)=1$
+What we actually use is only:
 
-이므로 중간값정리(IVT)로
+- $w_i>0$ for all $i$
+- $\sum_{i=1}^n w_i=1$
+
+So equal weights are completely fine.
+
+---
+
+## Idea of the Proof
+
+We convert weights into partition points of $[0,1]$,
+then apply the usual Mean Value Theorem on each piece.
+
+---
+
+## Step 1: Build Cumulative Sums
+
+Define
 
 $$
-\exists x_i\in[0,1]\ \text{such that}\ f(x_i)=y_i.
+y_0:=0,
+\qquad
+y_i:=\sum_{k=1}^i w_k\quad(i=1,\dots,n).
+$$
+
+Since each $w_i>0$,
+
+$$
+0=y_0<y_1<\cdots<y_n=1.
 $$
 
 ---
 
-## 3단계: 유일성과 단조성
+## Step 2: Pull Back by $f$
 
-$f'(x)>0$ 이므로 $f$는 엄격히 증가한다.
-
-이유: $a<b$ 일 때 평균값정리로 어떤 $\xi\in(a,b)$ 가 존재해
+Because $f$ is continuous on $[0,1]$ and $f(0)=0, f(1)=1$,
+IVT gives, for each $i$, a point $x_i\in[0,1]$ with
 
 $$
-f(b)-f(a)=f'(\xi)(b-a)>0.
+f(x_i)=y_i.
 $$
 
-따라서 $f(x_i)=y_i$ 를 만족하는 $x_i$ 는 유일하다.
+Also, $f'(x)>0$ implies $f$ is strictly increasing,
+so each $x_i$ is unique.
 
-$y_i$ 가 엄격히 증가하므로 $x_i$ 도 엄격히 증가:
+Hence
 
 $$
 0=x_0<x_1<\cdots<x_n=1.
 $$
 
-($x_0=0,\ x_n=1$ 은 유일성으로 바로 따라온다.)
-
 ---
 
-## 4단계: 각 구간에 평균값정리 적용
+## Step 3: Apply MVT on Each Interval
 
-각 $i=1,\dots,n$ 에 대해,
-
-- $f$는 $[x_{i-1},x_i]$ 에서 연속
-- $f$는 $(x_{i-1},x_i)$ 에서 미분 가능
-
-이므로 평균값정리에 의해
+Fix $i\in\{1,\dots,n\}$. On $[x_{i-1},x_i]$,
+$f$ is continuous and differentiable inside,
+so by MVT there exists
 
 $$
-\exists c_i\in(x_{i-1},x_i)\subset(0,1)
+c_i\in(x_{i-1},x_i)\subset(0,1)
 $$
 
-가 존재하여
+such that
 
 $$
 f'(c_i)=\frac{f(x_i)-f(x_{i-1})}{x_i-x_{i-1}}
@@ -114,7 +103,7 @@ f'(c_i)=\frac{f(x_i)-f(x_{i-1})}{x_i-x_{i-1}}
 =\frac{w_i}{x_i-x_{i-1}}.
 $$
 
-따라서
+So
 
 $$
 x_i-x_{i-1}=\frac{w_i}{f'(c_i)}.
@@ -122,9 +111,9 @@ $$
 
 ---
 
-## 5단계: 합치기(망원합)
+## Step 4: Sum Everything
 
-위 식을 $i=1,\dots,n$ 에 대해 합하면
+Now sum over $i=1,\dots,n$:
 
 $$
 \sum_{i=1}^n \frac{w_i}{f'(c_i)}
@@ -133,26 +122,15 @@ $$
 =1.
 $$
 
-원하는 결론이 성립한다.
+Therefore,
 
 $$
-\boxed{\sum_{i=1}^n \frac{w_i}{f'(c_i)}=1}
+\boxed{\sum_{i=1}^n \frac{w_i}{f'(c_i)}=1.}
 $$
 
 ---
 
-## 발표용 코멘트
+## Short Closing Line
 
-- 초안의 핵심 아이디어는 정확하다.
-- 보강 포인트는 다음 3가지:
-
-1. 존재는 연속성+IVT, 유일성은 $f'(x)>0$ 에서 온 단조성으로 분리해 말하기
-2. $x_0=0,\ x_n=1$ 근거를 한 줄 명시하기
-3. $w_i$의 엄격 증가는 불필요, $w_i>0$ 과 $\sum w_i=1$이면 충분
-
----
-
-## 한 줄 요약
-
-누적합 $y_i$ 를 역상 점 $x_i$ 로 옮기고 각 구간에 MVT를 적용하면
-$\dfrac{w_i}{f'(c_i)}=x_i-x_{i-1}$ 가 되어, 합하면 정확히 1이 된다.
+The whole proof is just:
+"cumulative weights + IVT + MVT + telescoping sum."
