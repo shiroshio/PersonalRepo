@@ -117,33 +117,16 @@ $$
 
 ---
 
-## Visual 1: y-slices and preimage lengths
+## Lebesgue-integral concept (visual)
 
-![y-slices and pulled-back x-lengths](./assets/mvp_y_slices_preimage.png)
+![Lebesgue concept animation](./assets/lebesgue_concept.gif)
 
-Short note:
-- We split the y-axis first by $w_i$.
-- Then each y-slice is pulled back to an x-interval.
-- That x-length is what appears as $\frac{w_i}{f'(c_i)}$.
+Short talk track:
 
----
+- We move a horizontal level $t$ upward.
+- At each level, we look at the set $\{x:g(x)\ge t\}$ and its length.
+- Adding these level-set lengths over all $t$ is the Lebesgue-style idea of integration.
 
-## Visual 2: why the sum becomes 1
-
-![stacked length contributions](./assets/mvp_weighted_length_sum.png)
-
-Short note:
-- Each bar is one term $\frac{w_i}{f'(c_i)}$.
-- Stacking all terms gives total length $x_n-x_0$.
-- Since $x_0=0$ and $x_n=1$, the total is exactly 1.
-
----
-
-## Closing remark
-
-This is the same proof idea in picture form:
-split in y, pull back to x, and add lengths.
-
-That is why this feels close to a Lebesgue-style viewpoint.
+This is why our y-first viewpoint in the proof is a natural bridge.
 
 
