@@ -117,87 +117,33 @@ $$
 
 ---
 
-## Extra Perspective: Why This Feels Different
+## Visual 1: y-slices and preimage lengths
 
-In many calculus proofs, we split the **x-axis** first.
+![y-slices and pulled-back x-lengths](./assets/mvp_y_slices_preimage.png)
 
-Here we did the opposite:
-
-- first split the **y-axis** by cumulative weights $y_i$
-- then pull those level intervals back to x-space
-- then add the pulled-back lengths
-
-So this proof is not just a technical MVT trick.
-It has a clear geometric viewpoint.
+Short note:
+- We split the y-axis first by $w_i$.
+- Then each y-slice is pulled back to an x-interval.
+- That x-length is what appears as $\frac{w_i}{f'(c_i)}$.
 
 ---
 
-## Geometric Interpretation
+## Visual 2: why the sum becomes 1
 
-From Step 3 we got
+![stacked length contributions](./assets/mvp_weighted_length_sum.png)
 
-$$
-x_i-x_{i-1}=\frac{w_i}{f'(c_i)}.
-$$
-
-Interpretation:
-
-- $w_i=y_i-y_{i-1}$ is a small vertical increment
-- dividing by $f'(c_i)$ converts vertical scale to horizontal scale
-- $\frac{w_i}{f'(c_i)}$ is the corresponding horizontal length
-
-So
-
-$$
-\sum_{i=1}^n \frac{w_i}{f'(c_i)}
-$$
-
-is literally the total horizontal length from $0$ to $1$.
+Short note:
+- Each bar is one term $\frac{w_i}{f'(c_i)}$.
+- Stacking all terms gives total length $x_n-x_0$.
+- Since $x_0=0$ and $x_n=1$, the total is exactly 1.
 
 ---
 
-## Bridge to a Lebesgue-Type View (Informal)
+## Closing remark
 
-This is close in spirit to a level-set viewpoint:
+This is the same proof idea in picture form:
+split in y, pull back to x, and add lengths.
 
-- organize by function values (levels in y)
-- measure the size of preimages in x
+That is why this feels close to a Lebesgue-style viewpoint.
 
-If we formally write $y=f(x)$, then
 
-$$
-dy=f'(x)\,dx,
-\qquad
-dx=\frac{1}{f'(x)}\,dy.
-$$
-
-So "adding x-lengths by y-levels" suggests
-
-$$
-\int_0^1 \frac{1}{f'(f^{-1}(y))}\,dy=1.
-$$
-
-Our finite weighted identity is a discrete prototype of that picture.
-
----
-
-## Important Clarification
-
-For this proof, the weights do **not** need to be all different.
-
-What is really needed is only:
-
-- $w_i>0$ for each $i$
-- $\sum_{i=1}^n w_i=1$
-
-Distinctness is optional, not essential.
-
----
-
-## Closing Script (for presentation)
-
-"The main proof is elementary: IVT + MVT + telescoping.
-But the way we set it up is the interesting part.
-We partition in y first, and measure pulled-back x-lengths.
-That perspective is exactly why this result naturally connects
-to a Lebesgue-style way of thinking about integration."
