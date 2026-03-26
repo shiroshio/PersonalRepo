@@ -117,6 +117,20 @@ $$
 
 ---
 
+## Riemann-integral concept (visual)
+
+![Riemann concept animation](./assets/riemann_concept.gif)
+
+Short talk track:
+
+- In the Riemann viewpoint, we partition the x-axis.
+- We build rectangles and add their areas.
+- As partitions get finer, the sum approaches the area under the curve.
+
+This is the familiar starting point from calculus.
+
+---
+
 ## Lebesgue-integral concept (visual)
 
 ![Lebesgue concept animation](./assets/lebesgue_concept.gif)
