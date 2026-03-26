@@ -1,6 +1,6 @@
-# A Weighted Mean-Value Identity
+# A Weighted Mean-Value Problem
 
-This is a clean MVT-based proof you can present step by step.
+## 202611116 박우민
 
 ---
 
@@ -27,19 +27,6 @@ $$
 
 ---
 
-## Quick Answer to the Weight Question
-
-The weights do **not** need to be pairwise distinct.
-
-What we actually use is only:
-
-- $w_i>0$ for all $i$
-- $\sum_{i=1}^n w_i=1$
-
-So equal weights are completely fine.
-
----
-
 ## Idea of the Proof
 
 We convert weights into partition points of $[0,1]$,
@@ -52,9 +39,9 @@ then apply the usual Mean Value Theorem on each piece.
 Define
 
 $$
-y_0:=0,
+y_0=0,
 \qquad
-y_i:=\sum_{k=1}^i w_k\quad(i=1,\dots,n).
+y_i=\sum_{k=1}^i w_k\quad(i=1,\dots,n).
 $$
 
 Since each $w_i>0$,
@@ -130,7 +117,87 @@ $$
 
 ---
 
-## Short Closing Line
+## Extra Perspective: Why This Feels Different
 
-The whole proof is just:
-"cumulative weights + IVT + MVT + telescoping sum."
+In many calculus proofs, we split the **x-axis** first.
+
+Here we did the opposite:
+
+- first split the **y-axis** by cumulative weights $y_i$
+- then pull those level intervals back to x-space
+- then add the pulled-back lengths
+
+So this proof is not just a technical MVT trick.
+It has a clear geometric viewpoint.
+
+---
+
+## Geometric Interpretation
+
+From Step 3 we got
+
+$$
+x_i-x_{i-1}=\frac{w_i}{f'(c_i)}.
+$$
+
+Interpretation:
+
+- $w_i=y_i-y_{i-1}$ is a small vertical increment
+- dividing by $f'(c_i)$ converts vertical scale to horizontal scale
+- $\frac{w_i}{f'(c_i)}$ is the corresponding horizontal length
+
+So
+
+$$
+\sum_{i=1}^n \frac{w_i}{f'(c_i)}
+$$
+
+is literally the total horizontal length from $0$ to $1$.
+
+---
+
+## Bridge to a Lebesgue-Type View (Informal)
+
+This is close in spirit to a level-set viewpoint:
+
+- organize by function values (levels in y)
+- measure the size of preimages in x
+
+If we formally write $y=f(x)$, then
+
+$$
+dy=f'(x)\,dx,
+\qquad
+dx=\frac{1}{f'(x)}\,dy.
+$$
+
+So "adding x-lengths by y-levels" suggests
+
+$$
+\int_0^1 \frac{1}{f'(f^{-1}(y))}\,dy=1.
+$$
+
+Our finite weighted identity is a discrete prototype of that picture.
+
+---
+
+## Important Clarification
+
+For this proof, the weights do **not** need to be all different.
+
+What is really needed is only:
+
+- $w_i>0$ for each $i$
+- $\sum_{i=1}^n w_i=1$
+
+Distinctness is optional, not essential.
+
+---
+
+## Closing Script (for presentation)
+
+"The main proof is elementary: IVT + MVT + telescoping.
+But the way we set it up is the interesting part.
+We partition in y first, and measure pulled-back x-lengths.
+That perspective is exactly why this result naturally connects
+to a Lebesgue-style way of thinking about integration."
